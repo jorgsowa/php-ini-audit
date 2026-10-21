@@ -48,20 +48,25 @@ jobs:
     name: Parity with PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    container: php:${{ matrix.php }}-cli
     strategy:
       fail-fast: false
       matrix:
         php: ["8.5"]
     steps:
       - uses: actions/checkout@v7
-      # The official image has no composer, git or unzip; the PHPUnit PHAR needs none of them.
-      - name: Install PHPUnit
-        run: php -r 'copy("https://phar.phpunit.de/phpunit-9.6.phar", "/usr/local/bin/phpunit");' && chmod +x /usr/local/bin/phpunit
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      # The official image has no composer, so dependencies are installed on the runner.
+      - name: Install dependencies
+        run: composer install --no-progress
       - name: Parity tests
-        env:
-          PHP_CGI: /usr/local/bin/php-cgi
-        run: phpunit tests/PhpParityTest.php
+        run: >-
+          docker run --rm -v "$PWD":/app -w /app
+          -e PHP_CGI=/usr/local/bin/php-cgi
+          php:${{ matrix.php }}-cli
+          vendor/bin/phpunit tests/PhpParityTest.php
 
   docker-images:
     name: Real PHP images
