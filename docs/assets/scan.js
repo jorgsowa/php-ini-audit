@@ -9,6 +9,7 @@
   var version = document.getElementById("scan-version");
   var profile = document.getElementById("scan-profile");
   var button = document.getElementById("scan-button");
+  var clear = document.getElementById("scan-clear");
   var status = document.getElementById("scan-status");
   var results = document.getElementById("results");
   var runtime = null;
@@ -160,6 +161,17 @@
       return;
     }
     scan(input.value);
+  });
+
+  clear.addEventListener("click", function () {
+    input.value = "";
+    file.value = "";
+    status.textContent = "";
+    results.hidden = true;
+    ["target", "severity-summary", "warnings", "findings"].forEach(function (id) {
+      document.getElementById(id).replaceChildren();
+    });
+    input.focus();
   });
 
   file.addEventListener("change", function () {

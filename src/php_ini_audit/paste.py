@@ -22,13 +22,13 @@ KINDS = {
 }
 _PHPINFO = re.compile(r'<td class="e">|\bLocal Value\b|^PHP Version\b|^phpinfo\(\)', re.MULTILINE)
 _HTACCESS = re.compile(
-    r"^\s*(?:php_(?:admin_)?(?:value|flag)\s+[\w.]+\s|<(?:IfModule|FilesMatch|Files|Directory|Location)\b"
+    r"^[ \t]*(?:php_(?:admin_)?(?:value|flag)\s+[\w.]+\s|<(?:IfModule|FilesMatch|Files|Directory|Location)\b"
     r"|(?:AddHandler|AddType|SetHandler|RewriteEngine|RewriteRule|Options|Require|DirectoryIndex)\s)",
     re.MULTILINE | re.IGNORECASE,
 )
 _FPM = re.compile(
-    r"^\s*(?:listen|pm|pm\.[\w.]+|php_(?:admin_)?(?:value|flag)\[[\w.]+\]|security\.limit_extensions|clear_env"
-    r"|catch_workers_output|request_terminate_timeout|process_control_timeout|daemonize|ping\.path)\s*=",
+    r"^[ \t]*(?:listen|pm|pm\.[\w.]+|php_(?:admin_)?(?:value|flag)\[[\w.]+\]|security\.limit_extensions|clear_env"
+    r"|catch_workers_output|request_terminate_timeout|process_control_timeout|daemonize|ping\.path)[ \t]*=",
     re.MULTILINE,
 )
 

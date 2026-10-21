@@ -1,3 +1,4 @@
+import time
 import unittest
 
 from php_ini_audit import paste
@@ -29,6 +30,11 @@ class DetectTest(unittest.TestCase):
             for text in texts:
                 with self.subTest(kind=kind, text=text[:40]):
                     self.assertEqual(paste.detect(text), kind)
+
+    def test_blank_lines_are_linear(self):
+        start = time.monotonic()
+        self.assertEqual(paste.detect(" \n" * 50000 + "x"), "php.ini")
+        self.assertLess(time.monotonic() - start, 1)
 
 
 class AuditTest(unittest.TestCase):
