@@ -282,6 +282,27 @@ final class VulnerabilitiesTest extends TestCase
         $this->assertSame([8, 2, 9], Versions::pick($evidence, [8, 2], '/opt/b/etc/php.ini')->version);
     }
 
+    public function testEqualPrefixIsAmbiguous(): void
+    {
+        $evidence = [new VersionEvidence([8, 2, 1], '/srv/a/x.h'), new VersionEvidence([8, 2, 9], '/srv/b/x.h')];
+        $this->assertNull(Versions::pick($evidence, [8, 2], '/srv/etc/php.ini'));
+    }
+
+    public function testHomebrewKegs(): void
+    {
+        $evidence = [
+            new VersionEvidence([8, 4, 12], '/opt/homebrew/opt/php-debug/include/php/main/php_version.h'),
+            new VersionEvidence([8, 4, 25], '/opt/homebrew/opt/php@8.4/include/php/main/php_version.h'),
+            new VersionEvidence([8, 5, 10], '/opt/homebrew/opt/php'),
+        ];
+        $pick = static function (string $ini, array $branch) use ($evidence): array {
+            return Versions::pick($evidence, $branch, $ini)->version;
+        };
+        $this->assertSame([8, 4, 25], $pick('/opt/homebrew/etc/php/8.4/php.ini', [8, 4]));
+        $this->assertSame([8, 4, 12], $pick('/opt/homebrew/etc/php/8.4-debug/php.ini', [8, 4]));
+        $this->assertSame([8, 5, 10], $pick('/opt/homebrew/etc/php/8.5/php.ini', [8, 5]));
+    }
+
     // Fixtures
 
     /** @return array<string, mixed> */

@@ -113,6 +113,9 @@ final class Session
                 . 'which enables CSRF.',
             'recommendation' => 'Set session.cookie_samesite = "Lax" (or "Strict").',
         ], static function (Context $ctx): iterable {
+            if ($ctx->versionBelow(7, 3)) {
+                return;
+            }
             $setting = $ctx->get('session.cookie_samesite');
             $value = strtolower($setting->text());
             if ($value === '') {

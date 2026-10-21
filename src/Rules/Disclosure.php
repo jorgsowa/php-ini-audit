@@ -86,7 +86,7 @@ final class Disclosure
             'recommendation' => 'Set zend.exception_ignore_args = On in production.',
         ], static function (Context $ctx): iterable {
             $setting = $ctx->get('zend.exception_ignore_args');
-            if (!$setting->asBool()) {
+            if ($ctx->versionBelow(7, 4) !== true && !$setting->asBool()) {
                 yield new Hit('zend.exception_ignore_args is Off', [$setting]);
             }
         });

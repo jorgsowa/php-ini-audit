@@ -150,6 +150,16 @@ final class RulesTest extends TestCase
         $this->assertSame(Severity::MEDIUM, $finding->severity);
     }
 
+    public function testDirectivesMissingFromOldVersions(): void
+    {
+        $old = Helpers::auditIni('', [], ['phpVersion' => [7, 2, 34]]);
+        $this->assertEmpty(Helpers::findingsFor($old, 'SESS-007'));
+        $this->assertEmpty(Helpers::findingsFor($old, 'ERR-005'));
+        $current = Helpers::auditIni('', [], ['phpVersion' => [7, 4, 33]]);
+        $this->assertNotEmpty(Helpers::findingsFor($current, 'SESS-007'));
+        $this->assertNotEmpty(Helpers::findingsFor($current, 'ERR-005'));
+    }
+
     public function testSidEntropy(): void
     {
         $weak = Helpers::findingsFor(

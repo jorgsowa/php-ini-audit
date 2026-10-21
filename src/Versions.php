@@ -47,7 +47,7 @@ final class Versions
     }
 
     /**
-     * Choose the evidence for one installation; ambiguous branches resolve only by shared path prefix.
+     * Choose the evidence for one installation; ambiguous branches resolve by Homebrew keg or a unique shared path prefix.
      * @param list<VersionEvidence> $evidence
      * @param array{int, int}|null $branch
      */
@@ -72,17 +72,48 @@ final class Versions
             return $candidates[0];
         }
         if ($near !== null && $near !== '') {
+            $keg = self::homebrewKeg($candidates, $near);
+            if ($keg !== null) {
+                return $keg;
+            }
             $shared = static function (VersionEvidence $e) use ($near): int {
                 return self::commonPrefixLength(explode(' ', $e->source, 2)[0], $near);
             };
             $best = $candidates[0];
+            $tied = false;
             foreach ($candidates as $candidate) {
-                if ($shared($candidate) > $shared($best)) {
+                $length = $shared($candidate);
+                if ($length > $shared($best)) {
                     $best = $candidate;
+                    $tied = false;
+                } elseif ($length === $shared($best) && $candidate->version !== $best->version) {
+                    $tied = true;
                 }
             }
-            if ($shared($best) > strlen('/opt/')) {
+            if (!$tied && $shared($best) > strlen('/opt/')) {
                 return $best;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Homebrew reads <prefix>/etc/php/<name>/ from the php@<name> keg, or from php / php-debug for the current branch.
+     * @param list<VersionEvidence> $candidates
+     */
+    private static function homebrewKeg(array $candidates, string $near): ?VersionEvidence
+    {
+        if (!preg_match('#^(.*)/etc/php/(\d+\.\d+)(-debug)?/#', $near, $match)) {
+            return null;
+        }
+        $suffix = $match[3] ?? '';
+        foreach (["php@$match[2]$suffix", "php$suffix"] as $keg) {
+            $prefix = "$match[1]/opt/$keg";
+            foreach ($candidates as $candidate) {
+                $source = explode(' ', $candidate->source, 2)[0];
+                if ($source === $prefix || Util::startsWith($source, "$prefix/")) {
+                    return $candidate;
+                }
             }
         }
         return null;
