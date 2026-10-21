@@ -1,0 +1,36 @@
+PHP Version => 8.1.2
+Server API => FPM/FastCGI
+System => Linux
+Loaded Configuration File => /etc/php/8.1/fpm/php.ini
+Additional .ini files parsed => /etc/php/8.1/fpm/conf.d/10-opcache.ini, /etc/php/8.1/fpm/conf.d/20-xdebug.ini
+
+allow_url_fopen => On => On
+allow_url_include => Off => Off
+display_errors => Off => Off
+display_startup_errors => Off => Off
+error_log => no value => no value
+expose_php => On => On
+file_uploads => On => On
+log_errors => On => On
+memory_limit => 128M => 128M
+open_basedir => no value => no value
+disable_functions => no value => no value
+cgi.fix_pathinfo => 1 => 1
+session.cookie_httponly => 0 => 0
+session.cookie_secure => 0 => 0
+session.cookie_samesite => no value => no value
+session.use_strict_mode => 0 => 0
+session.save_path => /var/lib/php/sessions => /var/lib/php/sessions
+xdebug.mode => debug => debug
+xdebug.start_with_request => yes => yes
+xdebug.client_host => localhost => localhost
+
+Core
+
+date
+
+opcache
+
+session
+
+xdebug

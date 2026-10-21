@@ -38,33 +38,47 @@
     <label class="visually-hidden" for="scan-input">Configuration to audit</label>
     <textarea id="scan-input" rows="12" spellcheck="false" autocomplete="off"
               placeholder="Paste phpinfo() HTML or text, php -i output, php.ini, .user.ini, a PHP-FPM pool or .htaccess…"></textarea>
-    <div class="filters scanner-controls">
+    <div class="scanner-actions">
+      <button class="button primary scan-button" id="scan-button" type="submit">Scan</button>
       <label class="button file-button">Open file…<input id="scan-file" type="file"></label>
-      <select id="scan-kind" aria-label="Input type">
-        <option value="">Detect input type</option>
-        <option value="phpinfo">phpinfo() output</option>
-        <option value="php.ini">php.ini</option>
-        <option value="user.ini">.user.ini</option>
-        <option value="fpm">PHP-FPM configuration</option>
-        <option value="htaccess">.htaccess</option>
+      <select class="button" id="scan-example" aria-label="Load an example">
+        <option value="">Try an example…</option>
+        <option value="legacy-php.ini" data-kind="php.ini" data-sapi="fpm" data-version="8.1.2">Insecure php.ini (PHP 8.1.2)</option>
+        <option value="hardened-php.ini" data-kind="php.ini" data-sapi="fpm">Hardened php.ini</option>
+        <option value="phpinfo.txt" data-kind="phpinfo">phpinfo() output</option>
+        <option value="user.ini" data-kind="user.ini" data-sapi="fpm">.user.ini in an uploads directory</option>
+        <option value="www.conf" data-kind="fpm">PHP-FPM pool (www.conf)</option>
+        <option value="uploads.htaccess" data-kind="htaccess" data-sapi="apache2">.htaccess mapping images to PHP</option>
       </select>
-      <select id="scan-sapi" aria-label="SAPI">
-        <option value="">Detect SAPI</option>
-        <option value="fpm">fpm</option>
-        <option value="apache2">apache2</option>
-        <option value="cgi">cgi</option>
-        <option value="litespeed">litespeed</option>
-        <option value="cli">cli</option>
-      </select>
-      <input id="scan-version" type="text" inputmode="decimal" placeholder="PHP version, e.g. 8.3.12" aria-label="PHP version" size="22">
-      <select id="scan-profile" aria-label="Profile">
-        <option value="production">Production profile</option>
-        <option value="development">Development profile</option>
-      </select>
-      <button class="button primary" id="scan-button" type="submit">Scan</button>
-      <button class="button" id="scan-clear" type="button">Clear</button>
+      <button class="link-button" id="scan-clear" type="button">Clear</button>
       <span class="count" id="scan-status" role="status" aria-live="polite"></span>
     </div>
+    <details class="scan-options" id="scan-options">
+      <summary>Options <span class="count" id="scan-options-summary">detected automatically</span></summary>
+      <div class="filters scanner-controls">
+        <select id="scan-kind" aria-label="Input type">
+          <option value="">Detect input type</option>
+          <option value="phpinfo">phpinfo() output</option>
+          <option value="php.ini">php.ini</option>
+          <option value="user.ini">.user.ini</option>
+          <option value="fpm">PHP-FPM configuration</option>
+          <option value="htaccess">.htaccess</option>
+        </select>
+        <select id="scan-sapi" aria-label="SAPI">
+          <option value="">Detect SAPI</option>
+          <option value="fpm">fpm</option>
+          <option value="apache2">apache2</option>
+          <option value="cgi">cgi</option>
+          <option value="litespeed">litespeed</option>
+          <option value="cli">cli</option>
+        </select>
+        <input id="scan-version" type="text" inputmode="decimal" placeholder="PHP version, e.g. 8.3.12" aria-label="PHP version" size="22">
+        <select id="scan-profile" aria-label="Profile">
+          <option value="production">Production profile</option>
+          <option value="development">Development profile</option>
+        </select>
+      </div>
+    </details>
   </form>
 
   <section id="results" hidden>

@@ -5,6 +5,7 @@
   var form = document.getElementById("scan-form");
   var input = document.getElementById("scan-input");
   var file = document.getElementById("scan-file");
+  var example = document.getElementById("scan-example");
   var kind = document.getElementById("scan-kind");
   var sapi = document.getElementById("scan-sapi");
   var version = document.getElementById("scan-version");
@@ -13,6 +14,7 @@
   var clear = document.getElementById("scan-clear");
   var status = document.getElementById("scan-status");
   var results = document.getElementById("results");
+  var optionsSummary = document.getElementById("scan-options-summary");
   var runtime = null;
 
   var SCAN = [
@@ -46,6 +48,15 @@
       runtime.catch(function () { runtime = null; });
     }
     return runtime;
+  }
+
+  function summarizeOptions() {
+    var chosen = [];
+    if (kind.value) chosen.push(kind.options[kind.selectedIndex].text);
+    if (sapi.value) chosen.push(sapi.value);
+    if (version.value.trim()) chosen.push("PHP " + version.value.trim());
+    if (profile.value !== "production") chosen.push(profile.value);
+    optionsSummary.textContent = chosen.length ? chosen.join(", ") : "detected automatically";
   }
 
   function el(tag, className, text) {
@@ -167,6 +178,11 @@
     input.value = "";
     file.value = "";
     status.textContent = "";
+    kind.value = "";
+    sapi.value = "";
+    version.value = "";
+    profile.value = "production";
+    summarizeOptions();
     results.hidden = true;
     ["target", "severity-summary", "warnings", "findings"].forEach(function (id) {
       document.getElementById(id).replaceChildren();
@@ -182,9 +198,35 @@
       // A file name settles what text alone cannot.
       if (chosen.name === ".user.ini") kind.value = "user.ini";
       else if (chosen.name === ".htaccess") kind.value = "htaccess";
+      summarizeOptions();
       scan(text);
     });
   });
+
+  example.addEventListener("change", function () {
+    var chosen = example.options[example.selectedIndex];
+    if (!chosen.value) return;
+    example.value = "";
+    file.value = "";
+    scanner().catch(function () {});
+    fetch("assets/examples/" + chosen.value)
+      .then(function (response) {
+        if (!response.ok) throw new Error("could not load the example");
+        return response.text();
+      })
+      .then(function (text) {
+        input.value = text;
+        kind.value = chosen.dataset.kind || "";
+        sapi.value = chosen.dataset.sapi || "";
+        version.value = chosen.dataset.version || "";
+        profile.value = "production";
+        summarizeOptions();
+        scan(text);
+      })
+      .catch(function (error) { status.textContent = error.message; });
+  });
+
+  [kind, sapi, version, profile].forEach(function (field) { field.addEventListener("input", summarizeOptions); });
 
   // Start downloading the runtime as soon as the visitor shows intent.
   input.addEventListener("focus", function () { scanner().catch(function () {}); }, { once: true });
