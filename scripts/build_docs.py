@@ -1,6 +1,8 @@
 """Fill the generated regions of docs/*.html from the rule registry.
 
 Usage: python3 scripts/build_docs.py [--check]
+
+Also packs the scanner into docs/assets/php_ini_audit.zip for the in-browser phpinfo() scanner.
 """
 
 from __future__ import annotations
@@ -9,6 +11,7 @@ import argparse
 import html
 import re
 import sys
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -19,6 +22,9 @@ from php_ini_audit.model import Severity  # noqa: E402
 from php_ini_audit.rules import CATEGORIES, REGISTRY  # noqa: E402
 
 DOCS = ROOT / "docs"
+PACKAGE = ROOT / "src" / "php_ini_audit"
+BUNDLE = DOCS / "assets" / "php_ini_audit.zip"
+INI_DUMP = DOCS / "assets" / "ini-dump.php"
 REGION = re.compile(r"(<!-- generated:(?P<name>[a-z-]+) -->)(.*?)(<!-- /generated:(?P=name) -->)", re.DOTALL)
 
 
@@ -109,6 +115,7 @@ GENERATORS = {
     "severity-options": render_severity_options,
     "category-options": render_category_options,
     "category-table": render_category_table,
+    "ini-dump": lambda: _esc(INI_DUMP.read_text(encoding="utf-8")),
 }
 
 
@@ -120,6 +127,15 @@ def build(text: str) -> str:
         return f"{match.group(1)}{generator()}{match.group(4)}"
 
     return REGION.sub(replace, text)
+
+
+def write_bundle() -> None:
+    """Zip the package sources for zipimport in Pyodide; fixed timestamps keep the archive reproducible."""
+    with zipfile.ZipFile(BUNDLE, "w", zipfile.ZIP_DEFLATED) as bundle:
+        for path in sorted(PACKAGE.rglob("*.py")):
+            info = zipfile.ZipInfo(str(path.relative_to(PACKAGE.parent)), date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            bundle.writestr(info, path.read_bytes())
 
 
 def main(argv=None) -> int:
@@ -139,6 +155,8 @@ def main(argv=None) -> int:
         return 1
     if stale and not args.check:
         print(f"updated: {', '.join(stale)}")
+    if not args.check:
+        write_bundle()
     return 0
 
 

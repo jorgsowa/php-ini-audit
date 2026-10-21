@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Browser scanner — php-ini-audit</title>
+  <meta name="description" content="Paste phpinfo() output, php.ini, .user.ini, a PHP-FPM pool or .htaccess and audit it in your browser. Nothing is uploaded.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">php-ini-<span>audit</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Overview</a>
+      <a href="usage.html">Usage</a>
+      <a href="scan.html" aria-current="page">Scan in browser</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="rules.html">Rules</a>
+      <a href="https://github.com/jorgsowa/php-ini-audit">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Scan in the browser</h1>
+  <p class="lead">Paste <code>phpinfo()</code> output, a <code>php.ini</code>, <code>.user.ini</code>, PHP-FPM pool or
+    <code>.htaccess</code> and get the same report as the command-line scanner.</p>
+
+  <div class="note">
+    <p><b>Nothing leaves your browser.</b> The scanner runs locally in WebAssembly
+      (<a href="https://pyodide.org/">Pyodide</a>) and sends nothing back.</p>
+  </div>
+
+  <h2 id="scan">Scan <a class="anchor" href="#scan">#</a></h2>
+  <form id="scan-form" class="scanner">
+    <label class="visually-hidden" for="scan-input">Configuration to audit</label>
+    <textarea id="scan-input" rows="12" spellcheck="false" autocomplete="off"
+              placeholder="Paste phpinfo() HTML or text, php -i output, php.ini, .user.ini, a PHP-FPM pool or .htaccess…"></textarea>
+    <div class="filters scanner-controls">
+      <label class="button file-button">Open file…<input id="scan-file" type="file"></label>
+      <select id="scan-kind" aria-label="Input type">
+        <option value="">Detect input type</option>
+        <option value="phpinfo">phpinfo() output</option>
+        <option value="php.ini">php.ini</option>
+        <option value="user.ini">.user.ini</option>
+        <option value="fpm">PHP-FPM configuration</option>
+        <option value="htaccess">.htaccess</option>
+      </select>
+      <select id="scan-sapi" aria-label="SAPI">
+        <option value="">Detect SAPI</option>
+        <option value="fpm">fpm</option>
+        <option value="apache2">apache2</option>
+        <option value="cgi">cgi</option>
+        <option value="litespeed">litespeed</option>
+        <option value="cli">cli</option>
+      </select>
+      <input id="scan-version" type="text" inputmode="decimal" placeholder="PHP version, e.g. 8.3.12" aria-label="PHP version" size="22">
+      <select id="scan-profile" aria-label="Profile">
+        <option value="production">Production profile</option>
+        <option value="development">Development profile</option>
+      </select>
+      <button class="button primary" id="scan-button" type="submit">Scan</button>
+      <span class="count" id="scan-status" role="status" aria-live="polite"></span>
+    </div>
+  </form>
+
+  <section id="results" hidden>
+    <h2 id="report">Report <a class="anchor" href="#report">#</a></h2>
+    <div class="table-scroll">
+      <table>
+        <tbody id="target"></tbody>
+      </table>
+    </div>
+    <p id="kind-hint" class="count" hidden>Pasted a per-directory file? Choose <b>.user.ini</b> as the input type:
+      PHP ignores some settings there.</p>
+    <p id="severity-summary" class="severity-summary"></p>
+    <ul id="warnings"></ul>
+    <div id="findings"></div>
+  </section>
+
+  <h2 id="phpinfo-safety">Getting the output safely <a class="anchor" href="#phpinfo-safety">#</a></h2>
+  <div class="note">
+    <p><b>Never leave phpinfo() publicly reachable.</b> It prints environment variables, request headers and
+      cookies, which often hold database passwords, API keys and session IDs (even <code>HttpOnly</code> ones), plus
+      paths and versions that help an attacker.</p>
+  </div>
+  <p>The scanner needs only the version, SAPI, loaded ini files, directives and extensions. This script prints
+    exactly that, in a format the scanner reads like phpinfo() output:</p>
+  <pre><code><!-- generated:ini-dump -->&lt;?php
+header(&#x27;Content-Type: text/plain&#x27;);
+header(&#x27;Cache-Control: no-store&#x27;);
+$show = fn ($value) =&gt; (string) $value === &#x27;&#x27; ? &#x27;no value&#x27; : $value;
+echo &#x27;PHP Version =&gt; &#x27;, PHP_VERSION, &quot;\nServer API =&gt; &quot;, PHP_SAPI, &quot;\nSystem =&gt; &quot;, PHP_OS_FAMILY,
+    &quot;\nLoaded Configuration File =&gt; &quot;, php_ini_loaded_file() ?: &#x27;(none)&#x27;,
+    &quot;\nAdditional .ini files parsed =&gt; &quot;, str_replace(&quot;,\n&quot;, &#x27;, &#x27;, trim((string) php_ini_scanned_files())) ?: &#x27;(none)&#x27;, &quot;\n\n&quot;;
+foreach (ini_get_all(null, true) as $name =&gt; $value) {
+    echo $name, &#x27; =&gt; &#x27;, $show($value[&#x27;local_value&#x27;]), &#x27; =&gt; &#x27;, $show($value[&#x27;global_value&#x27;]), &quot;\n&quot;;
+}
+foreach (get_loaded_extensions() as $extension) {
+    echo &quot;\n&quot;, $extension, &quot;\n&quot;;
+}
+<!-- /generated:ini-dump --></code></pre>
+  <ul>
+    <li>Upload it under a long random name (e.g. 64 characters) ending in <code>.php</code>, open it in the browser
+      or with <code>curl</code>, and delete it right after. Never commit or deploy it.</li>
+    <li>If you use phpinfo() instead, limit it to
+      <code>phpinfo(INFO_GENERAL | INFO_CONFIGURATION | INFO_MODULES)</code>. Under Apache <code>mod_php</code>
+      that still lists request headers.</li>
+    <li><code>php -i</code> needs no web page, but shows the CLI configuration, which usually differs from FPM or
+      Apache.</li>
+    <li>Directive values can still contain secrets, such as a password in <code>session.save_path</code>. Don't
+      paste the output into issues, chats or other online tools.</li>
+    <li>If a full phpinfo() page was ever public, rotate the credentials it showed.</li>
+  </ul>
+
+  <h2 id="inputs">Inputs <a class="anchor" href="#inputs">#</a></h2>
+  <ul>
+    <li><b>phpinfo() output</b> (HTML source, copied page or <code>php -i</code>): the values PHP actually runs
+      with, including pool, <code>.user.ini</code> and <code>.htaccess</code> overrides, and the exact version.</li>
+    <li><b>php.ini</b> (<code>php --ini</code> shows the path): syntax errors, typos and redefinitions; unset
+      directives fall back to PHP's defaults. Enter the PHP version to match known vulnerabilities.</li>
+    <li><b>.user.ini</b>: overrides on PHP's defaults, and settings PHP ignores there. Choose it explicitly; it looks
+      like a php.ini snippet.</li>
+    <li><b>PHP-FPM</b> (<code>php-fpm.conf</code> or a pool such as <code>www.conf</code>): pool settings and
+      <code>php_admin_value</code> overrides.</li>
+    <li><b>.htaccess</b>: <code>php_value</code>/<code>php_flag</code> overrides and handlers that execute non-PHP
+      files.</li>
+  </ul>
+  <p>One input is audited at a time. To combine php.ini, its scan directory, pools and overlays, use the
+    <a href="usage.html">command-line scan</a>.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">php-ini-audit <!-- generated:version -->0.1.0<!-- /generated:version --> · MIT license</div>
+</footer>
+<script src="assets/scan.js"></script>
+</body>
+</html>

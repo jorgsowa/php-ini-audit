@@ -238,6 +238,30 @@ td code { white-space: nowrap; }
 .rule:target { outline: 2px solid var(--accent); }
 .category-heading { margin-top: 36px; }
 
+/* phpinfo() scanner */
+.scanner textarea {
+  display: block;
+  width: 100%;
+  font: 13px/1.5 var(--mono);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  resize: vertical;
+}
+.scanner-controls { position: static; margin-top: 10px; }
+.scanner button { font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
+.scanner button:disabled { opacity: 0.6; cursor: progress; }
+.file-button { cursor: pointer; }
+.file-button input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.file-button:focus-within { outline: 2px solid var(--accent); }
+.severity-summary { display: flex; flex-wrap: wrap; gap: 8px; }
+#target th { width: 32%; text-transform: none; letter-spacing: 0; font-size: 14px; }
+#target td code { white-space: pre-line; overflow-wrap: anywhere; }
+#scan-version { flex: 0 1 200px; }
+.rule summary a.id { text-decoration: none; }
+
 .site-footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; padding: 24px 0 40px; }
 
 @media (max-width: 640px) {

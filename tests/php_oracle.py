@@ -69,3 +69,37 @@ def run(binary, ini=None, scan_dir=None, names=(), all_entries=False, script_dir
         finally:
             script.unlink()
     return json.loads(body)
+
+
+PHPINFO_SCRIPT = """<?php
+phpinfo(INFO_GENERAL | INFO_CONFIGURATION | INFO_MODULES);
+echo "\\n<!--pia-values-->", json_encode(ini_get_all(null, false));
+"""
+
+
+def output(binary, ini, source):
+    """Return what the PHP script `source` prints under php-cgi with only the given php.ini."""
+    script = Path(ini).parent / "pia_script.php"
+    script.write_text(source)
+    try:
+        completed = subprocess.run([binary, "-c", str(ini), "-q", str(script)], env={"PATH": os.environ.get("PATH", "")},
+                                   capture_output=True, text=True, timeout=30, check=True)
+    finally:
+        script.unlink()
+    return completed.stdout
+
+
+def phpinfo(binary, ini):
+    """Return php-cgi's phpinfo() HTML and the ini_get() value of every directive, from one run.
+
+    The script runs from the php.ini directory, so an open_basedir naming that directory still allows it.
+    """
+    script = Path(ini).parent / "pia_info.php"
+    script.write_text(PHPINFO_SCRIPT)
+    try:
+        completed = subprocess.run([binary, "-c", str(ini), "-q", str(script)], env={"PATH": os.environ.get("PATH", "")},
+                                   capture_output=True, text=True, timeout=30, check=True)
+    finally:
+        script.unlink()
+    html, values = completed.stdout.split("<!--pia-values-->")
+    return html, json.loads(values)

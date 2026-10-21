@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, FrozenSet, List, Optional, Sequence, Tuple
 
 from .config import EffectiveConfig, OverlayKind
 from .discovery import Discovery, Installation
@@ -47,6 +47,8 @@ class Target:
     pools: List[FpmPool] = field(default_factory=list)
     defaults_reason: Optional[str] = None
     synthetic: bool = False
+    # Directive names a phpinfo() dump lists; the rest do not exist in that PHP build.
+    observed: Optional[FrozenSet[str]] = None
 
     @property
     def name(self) -> str:
@@ -231,7 +233,9 @@ class Auditor:
         )
 
     def run(self, discovery: Discovery) -> AuditResult:
-        targets = self.build_targets(discovery)
+        return self.evaluate(self.build_targets(discovery))
+
+    def evaluate(self, targets: List[Target]) -> AuditResult:
         rules = selected_rules(self.options)
         findings: List[Finding] = []
         for target in targets:
@@ -256,6 +260,8 @@ class Auditor:
                     continue
                 for hit in rule.check(context):
                     if target.overlay and rule.scope == "config" and not self._touches_overlay(hit, target):
+                        continue
+                    if target.observed is not None and not self._observed(hit, target.observed):
                         continue
                     findings.append(self._finding(rule, hit, target.name))
         for path, parsed in sorted(self.parsed.items()):
@@ -303,6 +309,11 @@ class Auditor:
             if target.config.is_overlay(directive) or directive in target.config.ineffective:
                 return True
         return False
+
+    @staticmethod
+    def _observed(hit, observed: FrozenSet[str]) -> bool:
+        settings = [e for e in hit.evidence if isinstance(e, Setting)]
+        return len(settings) < len(hit.evidence) or not settings or any(s.name in observed for s in settings)
 
     def _finding(self, rule: Rule, hit, target_name: str) -> Finding:
         severity = hit.severity if hit.severity is not None else rule.severity

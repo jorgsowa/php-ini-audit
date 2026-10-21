@@ -8,10 +8,10 @@ import re
 import sys
 from typing import List, Optional
 
-from . import __version__
+from . import __version__, phpinfo
 from .discovery import Discoverer, Discovery
 from .engine import PROFILES, Auditor, Options
-from .fsutil import FileSystem
+from .fsutil import FileSystem, ReadError
 from .model import Severity
 from .report import render_json, render_markdown, render_rule, render_rules, render_sarif, render_text
 from .rules import REGISTRY
@@ -57,6 +57,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     scan = sub.add_parser("scan", help="audit configuration (default command)")
     add_source_options(scan)
+    scan.add_argument("--phpinfo", metavar="FILE", help="audit saved phpinfo() HTML or `php -i` output instead of "
+                      "configuration files; - reads stdin")
     scan.add_argument("--profile", choices=PROFILES, default="production",
                       help="severity profile (default production)")
     scan.add_argument("--sapi", choices=SAPIS, help="override the SAPI inferred from paths")
@@ -162,6 +164,11 @@ def _cmd_scan(args, fs: FileSystem) -> int:
         if upper not in REGISTRY and upper not in {r.category for r in REGISTRY.values()}:
             print(f"unknown rule or category: {selector}", file=sys.stderr)
             return EXIT_USAGE
+    if args.phpinfo:
+        text = sys.stdin.read() if args.phpinfo == "-" else fs.read_text(_display_path(fs, args.phpinfo))
+        options = Options(profile=args.profile, sapi=args.sapi, php_version=args.php_version,
+                          min_severity=args.min_severity, only=args.only, skip=args.skip)
+        return _report(args, phpinfo.audit(text, options))
     discovery = _discover(args, fs)
     system_scan = not (args.paths or args.ini or args.scan_dir or args.pool)
     path_checks = args.path_checks == "on" or (args.path_checks == "auto" and (system_scan or bool(args.root)))
@@ -176,8 +183,10 @@ def _cmd_scan(args, fs: FileSystem) -> int:
         only=args.only,
         skip=args.skip,
     )
-    result = Auditor(fs, options).run(discovery)
+    return _report(args, Auditor(fs, options).run(discovery))
 
+
+def _report(args, result) -> int:
     if args.format == "json":
         output = render_json(result, args.profile)
     elif args.format == "sarif":
@@ -215,6 +224,6 @@ def main(argv: Optional[List[str]] = None) -> int:
         if args.command == "discover":
             return _cmd_discover(args, fs)
         return _cmd_scan(args, fs)
-    except ValueError as exc:
+    except (ValueError, ReadError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_USAGE

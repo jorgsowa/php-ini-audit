@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from php_ini_audit import directives, values
+from php_ini_audit import directives, paste, phpinfo, values
 from php_ini_audit.discovery import Discoverer, Discovery
 from php_ini_audit.engine import Auditor, Options
 from php_ini_audit.fsutil import FileSystem
@@ -276,6 +276,63 @@ class OverlayParityTest(unittest.TestCase):
                     applied_by_php = php_value == value
                     self.assertEqual(name not in ineffective, applied_by_php, name)
                     self.assertEqual(target.config.get(name).value, php_value, name)
+
+
+
+@unittest.skipUnless(BINARIES, "php-cgi not found; set PHP_CGI to run parity tests")
+class PhpinfoParityTest(unittest.TestCase):
+    def test_phpinfo_values_match_ini_get(self):
+        for binary in BINARIES:
+            with self.subTest(binary=binary), tempfile.TemporaryDirectory() as tmp:
+                ini = Path(tmp).resolve() / "php.ini"
+                ini.write_text(
+                    f"display_errors = On\nallow_url_include = On\nmemory_limit = -1\nopen_basedir = /srv:{ini.parent}\n"
+                    "error_reporting = E_ALL & ~E_DEPRECATED\nsession.save_path = \"/var/lib/php & sessions\"\n"
+                    "disable_functions = exec,system\n"
+                )
+                html, expected = php_oracle.phpinfo(binary, ini)
+                info = phpinfo.parse(html)
+                target = phpinfo.build_target(info, Options())
+                self.assertEqual(target.php_version, php_oracle.version_tuple(info.fields["PHP Version"]))
+                self.assertEqual(target.sapi, "cgi")
+                self.assertEqual(target.files, [str(ini)])
+                mismatches = {}
+                for name in info.settings:
+                    if name not in expected:
+                        continue
+                    actual = target.config.get(name).value
+                    if comparable_displayed(name, actual) != comparable_displayed(name, expected[name]):
+                        mismatches[name] = (actual, expected[name])
+                self.assertEqual(mismatches, {}, "phpinfo() value vs ini_get()")
+                self.assertGreater(len(set(info.settings) & set(expected)), 100)
+
+    def test_ini_dump_script_matches_phpinfo(self):
+        script = (Path(__file__).resolve().parent.parent / "docs" / "assets" / "ini-dump.php").read_text()
+        for binary in BINARIES:
+            with self.subTest(binary=binary), tempfile.TemporaryDirectory() as tmp:
+                ini = Path(tmp).resolve() / "php.ini"
+                ini.write_text(
+                    "display_errors = On\nallow_url_include = On\nexpose_php = Off\nsession.use_strict_mode = 0\n"
+                    "memory_limit = -1\nerror_reporting = E_ALL & ~E_DEPRECATED\ndisable_functions = exec,system\n"
+                )
+                html, _ = php_oracle.phpinfo(binary, ini)
+                dump = php_oracle.output(binary, ini, script)
+                self.assertEqual(paste.detect(dump), "phpinfo")
+                self.assertEqual(finding_keys(paste.audit(dump)[1]), finding_keys(paste.audit(html)[1]))
+
+
+def finding_keys(result):
+    return sorted((f.rule_id, f.directive) for f in result.findings)
+
+
+def comparable_displayed(name, value):
+    """phpinfo() prints booleans as On/Off where ini_get() returns the raw string."""
+    if name == "error_reporting":
+        return values.eval_error_reporting(value or "0")
+    if value in (None, "", "0", "1", "On", "Off"):
+        return values.to_bool(value)
+    # phpinfo() trims cell whitespace.
+    return value.strip()
 
 
 if __name__ == "__main__":

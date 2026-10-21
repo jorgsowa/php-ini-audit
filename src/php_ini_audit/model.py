@@ -42,6 +42,7 @@ class SourceKind(str, enum.Enum):
     FPM = "php-fpm config"
     USER_INI = ".user.ini"
     HTACCESS = ".htaccess"
+    PHPINFO = "phpinfo()"
 
     def __str__(self) -> str:
         return self.value

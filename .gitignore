@@ -6,3 +6,4 @@ dist/
 .venv/
 .pytest_cache/
 ROADMAP.md
+docs/assets/php_ini_audit.zip

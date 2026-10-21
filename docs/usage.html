@@ -14,6 +14,7 @@
     <nav class="site-nav" aria-label="Main">
       <a href="index.html">Overview</a>
       <a href="usage.html" aria-current="page">Usage</a>
+      <a href="scan.html">Scan in browser</a>
       <a href="how-it-works.html">How it works</a>
       <a href="rules.html">Rules</a>
       <a href="https://github.com/jorgsowa/php-ini-audit">GitHub</a>
@@ -42,6 +43,7 @@ PYTHONPATH=src python3 -m php_ini_audit --help</code></pre>
         <tr><td><code>php-ini-audit --root /mnt/rootfs</code></td><td>Host discovery inside an extracted image, chroot or mounted disk. Symlinks stay inside the root.</td></tr>
         <tr><td><code>php-ini-audit --webroot /var/www/html</code></td><td>Adds <code>.user.ini</code>/<code>.htaccess</code> below the document root as overlays, and marks paths inside it as web-served.</td></tr>
         <tr><td><code>php-ini-audit --ini app.ini --scan-dir conf.d --pool www.conf</code></td><td>An explicit installation, like <code>php -c app.ini</code> with <code>PHP_INI_SCAN_DIR=conf.d</code>.</td></tr>
+        <tr><td><code>php -i | php-ini-audit --phpinfo -</code></td><td>The effective values a running PHP reports: saved <code>phpinfo()</code> HTML, the copied page or <code>php -i</code> output. Also available <a href="scan.html">in the browser</a>, together with pasted php.ini, pool and <code>.htaccess</code> files.</td></tr>
         <tr><td><code>php-ini-audit discover</code></td><td>Lists the files that would be read, without auditing.</td></tr>
       </tbody>
     </table>
