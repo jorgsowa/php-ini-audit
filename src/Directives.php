@@ -1,0 +1,425 @@
+<?php
+
+namespace PhpIniAudit;
+
+/** Known PHP INI directives: built-in defaults and where they may be changed. */
+final class Directives
+{
+    public const USER = 1;
+    public const PERDIR = 2;
+    public const SYSTEM = 4;
+    public const ALL = 7;
+
+    private const S = self::SYSTEM;
+    private const P = self::PERDIR | self::SYSTEM;
+    private const A = self::ALL;
+
+    /** name => [built-in default or null for NULL, changeable mode] */
+    public const KNOWN = [
+        // Core
+        'allow_url_fopen' => ['1', self::S],
+        'allow_url_include' => ['0', self::S],
+        'arg_separator.input' => ['&', self::P],
+        'arg_separator.output' => ['&', self::A],
+        'assert.active' => ['1', self::A],
+        'assert.bail' => ['0', self::A],
+        'assert.callback' => [null, self::A],
+        'assert.exception' => ['1', self::A],
+        'assert.warning' => ['1', self::A],
+        'auto_append_file' => [null, self::P],
+        'auto_detect_line_endings' => ['0', self::A],
+        'auto_globals_jit' => ['1', self::P],
+        'auto_prepend_file' => [null, self::P],
+        'browscap' => [null, self::S],
+        'date.timezone' => ['', self::A],
+        'default_charset' => ['UTF-8', self::A],
+        'default_mimetype' => ['text/html', self::A],
+        'default_socket_timeout' => ['60', self::A],
+        'disable_classes' => ['', self::S],
+        'disable_functions' => ['', self::S],
+        'display_errors' => ['1', self::A],
+        'display_startup_errors' => ['1', self::A],
+        'doc_root' => [null, self::S],
+        'docref_ext' => ['', self::A],
+        'docref_root' => ['', self::A],
+        'enable_dl' => ['1', self::S],
+        'enable_post_data_reading' => ['1', self::P],
+        'engine' => ['1', self::A],
+        'error_append_string' => [null, self::A],
+        'error_log' => [null, self::A],
+        'error_log_mode' => ['0644', self::A],
+        'error_prepend_string' => [null, self::A],
+        'error_reporting' => ['E_ALL', self::A],
+        'expose_php' => ['1', self::S],
+        'extension' => [null, self::S],
+        'extension_dir' => [null, self::S],
+        'fatal_error_backtraces' => ['1', self::A],
+        'file_uploads' => ['1', self::S],
+        'from' => ['', self::A],
+        'hard_timeout' => ['2', self::S],
+        'html_errors' => ['1', self::A],
+        'ignore_repeated_errors' => ['0', self::A],
+        'ignore_repeated_source' => ['0', self::A],
+        'ignore_user_abort' => ['0', self::A],
+        'implicit_flush' => ['0', self::A],
+        'include_path' => ['.:/usr/share/php', self::A],
+        'input_encoding' => ['', self::A],
+        'internal_encoding' => ['', self::A],
+        'log_errors' => ['0', self::A],
+        'mail.add_x_header' => ['0', self::P],
+        'mail.force_extra_parameters' => [null, self::P],
+        'mail.log' => [null, self::P],
+        'mail.mixed_lf_and_crlf' => ['0', self::P],
+        'max_execution_time' => ['30', self::A],
+        'max_file_uploads' => ['20', self::P],
+        'max_input_nesting_level' => ['64', self::P],
+        'max_input_time' => ['-1', self::P],
+        'max_input_vars' => ['1000', self::P],
+        'max_multipart_body_parts' => ['-1', self::P],
+        'memory_limit' => ['128M', self::A],
+        'open_basedir' => [null, self::A],
+        'output_buffering' => ['0', self::P],
+        'output_encoding' => ['', self::A],
+        'output_handler' => [null, self::P],
+        'post_max_size' => ['8M', self::P],
+        'precision' => ['14', self::A],
+        'realpath_cache_size' => ['4096K', self::S],
+        'realpath_cache_ttl' => ['120', self::S],
+        'register_argc_argv' => ['1', self::P],
+        'report_memleaks' => ['1', self::A],
+        'request_order' => [null, self::P],
+        'sendmail_from' => [null, self::A],
+        'sendmail_path' => ['/usr/sbin/sendmail -t -i', self::S],
+        'serialize_precision' => ['-1', self::A],
+        'short_open_tag' => ['1', self::P],
+        'SMTP' => ['localhost', self::A],
+        'smtp_port' => ['25', self::A],
+        'sys_temp_dir' => [null, self::S],
+        'syslog.facility' => ['LOG_USER', self::S],
+        'syslog.filter' => ['no-ctrl', self::A],
+        'syslog.ident' => ['php', self::S],
+        'unserialize_callback_func' => [null, self::A],
+        'unserialize_max_depth' => ['4096', self::A],
+        'upload_max_filesize' => ['2M', self::P],
+        'upload_tmp_dir' => [null, self::S],
+        'user_agent' => [null, self::A],
+        'user_dir' => [null, self::S],
+        'user_ini.cache_ttl' => ['300', self::S],
+        'user_ini.filename' => ['.user.ini', self::S],
+        'variables_order' => ['EGPCS', self::P],
+        'xmlrpc_error_number' => ['0', self::A],
+        'xmlrpc_errors' => ['0', self::S],
+        'zend.assertions' => ['1', self::A],
+        'zend.detect_unicode' => ['1', self::A],
+        'zend.enable_gc' => ['1', self::A],
+        'zend.exception_ignore_args' => ['0', self::A],
+        'zend.exception_string_param_max_len' => ['15', self::A],
+        'zend.multibyte' => ['0', self::P],
+        'zend.script_encoding' => [null, self::A],
+        'zend.signal_check' => ['0', self::S],
+        'zend_extension' => [null, self::S],
+        // CGI / FastCGI
+        'cgi.check_shebang_line' => ['1', self::S],
+        'cgi.discard_path' => ['0', self::S],
+        'cgi.fix_pathinfo' => ['1', self::S],
+        'cgi.force_redirect' => ['1', self::S],
+        'cgi.nph' => ['0', self::A],
+        'cgi.redirect_status_env' => [null, self::S],
+        'cgi.rfc2616_headers' => ['0', self::A],
+        'fastcgi.impersonate' => ['0', self::S],
+        'fastcgi.logging' => ['1', self::S],
+        // Session
+        'session.auto_start' => ['0', self::P],
+        'session.cache_expire' => ['180', self::A],
+        'session.cache_limiter' => ['nocache', self::A],
+        'session.cookie_domain' => ['', self::A],
+        'session.cookie_httponly' => ['0', self::A],
+        'session.cookie_lifetime' => ['0', self::A],
+        'session.cookie_partitioned' => ['0', self::A],
+        'session.cookie_path' => ['/', self::A],
+        'session.cookie_samesite' => ['', self::A],
+        'session.cookie_secure' => ['0', self::A],
+        'session.gc_divisor' => ['100', self::A],
+        'session.gc_maxlifetime' => ['1440', self::A],
+        'session.gc_probability' => ['1', self::A],
+        'session.lazy_write' => ['1', self::A],
+        'session.name' => ['PHPSESSID', self::A],
+        'session.referer_check' => ['', self::A],
+        'session.save_handler' => ['files', self::A],
+        'session.save_path' => ['', self::A],
+        'session.serialize_handler' => ['php', self::A],
+        'session.sid_bits_per_character' => ['4', self::A],
+        'session.sid_length' => ['32', self::A],
+        'session.trans_sid_hosts' => ['', self::A],
+        'session.trans_sid_tags' => ['a=href,area=href,frame=src,form=', self::A],
+        'session.upload_progress.cleanup' => ['1', self::P],
+        'session.upload_progress.enabled' => ['1', self::P],
+        'session.upload_progress.freq' => ['1%', self::P],
+        'session.upload_progress.min_freq' => ['1', self::P],
+        'session.upload_progress.name' => ['PHP_SESSION_UPLOAD_PROGRESS', self::P],
+        'session.upload_progress.prefix' => ['upload_progress_', self::P],
+        'session.use_cookies' => ['1', self::A],
+        'session.use_only_cookies' => ['1', self::A],
+        'session.use_strict_mode' => ['0', self::A],
+        'session.use_trans_sid' => ['0', self::A],
+        'url_rewriter.hosts' => ['', self::A],
+        'url_rewriter.tags' => ['form=', self::A],
+        // mbstring / pcre / filter / intl
+        'mbstring.detect_order' => [null, self::A],
+        'mbstring.encoding_translation' => ['0', self::P],
+        'mbstring.http_input' => [null, self::A],
+        'mbstring.http_output' => [null, self::A],
+        'mbstring.internal_encoding' => [null, self::A],
+        'mbstring.language' => ['neutral', self::A],
+        'mbstring.regex_retry_limit' => ['1000000', self::A],
+        'mbstring.regex_stack_limit' => ['100000', self::A],
+        'mbstring.strict_detection' => ['0', self::A],
+        'mbstring.substitute_character' => [null, self::A],
+        'pcre.backtrack_limit' => ['1000000', self::A],
+        'pcre.jit' => ['1', self::A],
+        'pcre.recursion_limit' => ['100000', self::A],
+        'filter.default' => ['unsafe_raw', self::P],
+        'filter.default_flags' => [null, self::P],
+        'intl.default_locale' => [null, self::A],
+        'intl.error_level' => ['0', self::A],
+        'intl.use_exceptions' => ['0', self::A],
+        'bcmath.scale' => ['0', self::A],
+        'gd.jpeg_ignore_warning' => ['1', self::A],
+        'zlib.output_compression' => ['0', self::A],
+        'zlib.output_compression_level' => ['-1', self::A],
+        'zlib.output_handler' => ['', self::A],
+        // Phar / FFI
+        'phar.cache_list' => ['', self::S],
+        'phar.readonly' => ['1', self::A],
+        'phar.require_hash' => ['1', self::A],
+        'ffi.enable' => ['preload', self::S],
+        'ffi.preload' => [null, self::S],
+        // OPcache
+        'opcache.blacklist_filename' => ['', self::S],
+        'opcache.dups_fix' => ['0', self::A],
+        'opcache.enable' => ['1', self::A],
+        'opcache.enable_cli' => ['0', self::S],
+        'opcache.enable_file_override' => ['0', self::S],
+        'opcache.error_log' => ['', self::S],
+        'opcache.file_cache' => [null, self::S],
+        'opcache.file_cache_consistency_checks' => ['1', self::S],
+        'opcache.file_cache_only' => ['0', self::S],
+        'opcache.file_update_protection' => ['2', self::A],
+        'opcache.force_restart_timeout' => ['180', self::S],
+        'opcache.huge_code_pages' => ['0', self::S],
+        'opcache.interned_strings_buffer' => ['8', self::S],
+        'opcache.jit' => [null, self::A],
+        'opcache.jit_bisect_limit' => ['0', self::A],
+        'opcache.jit_blacklist_root_trace' => ['16', self::A],
+        'opcache.jit_blacklist_side_trace' => ['8', self::A],
+        'opcache.jit_buffer_size' => ['0', self::S],
+        'opcache.jit_debug' => ['0', self::A],
+        'opcache.jit_hot_func' => ['127', self::S],
+        'opcache.jit_hot_loop' => ['64', self::S],
+        'opcache.jit_hot_return' => ['8', self::S],
+        'opcache.jit_hot_side_exit' => ['8', self::A],
+        'opcache.jit_max_exit_counters' => ['8192', self::S],
+        'opcache.jit_max_loop_unrolls' => ['8', self::A],
+        'opcache.jit_max_polymorphic_calls' => ['2', self::A],
+        'opcache.jit_max_recursive_calls' => ['2', self::A],
+        'opcache.jit_max_recursive_returns' => ['2', self::A],
+        'opcache.jit_max_root_traces' => ['1024', self::S],
+        'opcache.jit_max_side_traces' => ['128', self::S],
+        'opcache.jit_max_trace_length' => ['1024', self::A],
+        'opcache.jit_prof_threshold' => ['0.005', self::A],
+        'opcache.lockfile_path' => ['/tmp', self::S],
+        'opcache.log_verbosity_level' => ['1', self::S],
+        'opcache.max_accelerated_files' => ['10000', self::S],
+        'opcache.max_file_size' => ['0', self::S],
+        'opcache.max_wasted_percentage' => ['5', self::S],
+        'opcache.memory_consumption' => ['128', self::S],
+        'opcache.optimization_level' => ['0x7FFEBFFF', self::S],
+        'opcache.preload' => ['', self::S],
+        'opcache.preload_user' => ['', self::S],
+        'opcache.protect_memory' => ['0', self::S],
+        'opcache.record_warnings' => ['0', self::S],
+        'opcache.restrict_api' => ['', self::S],
+        'opcache.revalidate_freq' => ['2', self::A],
+        'opcache.revalidate_path' => ['0', self::A],
+        'opcache.save_comments' => ['1', self::S],
+        'opcache.use_cwd' => ['1', self::S],
+        'opcache.validate_permission' => ['0', self::S],
+        'opcache.validate_root' => ['0', self::S],
+        'opcache.validate_timestamps' => ['1', self::A],
+        // Databases
+        'mysqli.allow_local_infile' => ['0', self::S],
+        'mysqli.allow_persistent' => ['1', self::S],
+        'mysqli.default_host' => [null, self::A],
+        'mysqli.default_port' => ['3306', self::A],
+        'mysqli.default_pw' => [null, self::A],
+        'mysqli.default_socket' => [null, self::A],
+        'mysqli.default_user' => [null, self::A],
+        'mysqli.local_infile_directory' => [null, self::S],
+        'mysqli.max_links' => ['-1', self::S],
+        'mysqli.max_persistent' => ['-1', self::S],
+        'mysqli.rollback_on_cached_plink' => ['0', self::S],
+        'mysqlnd.collect_memory_statistics' => ['0', self::S],
+        'mysqlnd.collect_statistics' => ['1', self::A],
+        'mysqlnd.debug' => [null, self::S],
+        'mysqlnd.log_mask' => ['0', self::A],
+        'mysqlnd.mempool_default_size' => ['16000', self::A],
+        'mysqlnd.net_cmd_buffer_size' => ['4096', self::A],
+        'mysqlnd.net_read_buffer_size' => ['32768', self::A],
+        'mysqlnd.net_read_timeout' => ['86400', self::A],
+        'mysqlnd.sha256_server_public_key' => [null, self::P],
+        'mysqlnd.trace_alloc' => [null, self::S],
+        'odbc.allow_persistent' => ['1', self::S],
+        'odbc.check_persistent' => ['1', self::S],
+        'odbc.default_db' => [null, self::A],
+        'odbc.default_pw' => [null, self::A],
+        'odbc.default_user' => [null, self::A],
+        'odbc.defaultbinmode' => ['1', self::A],
+        'odbc.defaultlrl' => ['4096', self::A],
+        'odbc.max_links' => ['-1', self::S],
+        'odbc.max_persistent' => ['-1', self::S],
+        'pdo_mysql.default_socket' => [null, self::S],
+        'pdo_odbc.connection_pooling' => ['strict', self::S],
+        'pgsql.allow_persistent' => ['1', self::S],
+        'pgsql.auto_reset_persistent' => ['0', self::S],
+        'pgsql.ignore_notice' => ['0', self::A],
+        'pgsql.log_notice' => ['0', self::A],
+        'pgsql.max_links' => ['-1', self::S],
+        'pgsql.max_persistent' => ['-1', self::S],
+        'sqlite3.defensive' => ['1', self::S],
+        'sqlite3.extension_dir' => [null, self::S],
+        'ldap.max_links' => ['-1', self::S],
+        // Network / TLS / mail-related extensions
+        'curl.cainfo' => [null, self::S],
+        'imap.enable_insecure_rsh' => ['0', self::S],
+        'openssl.cafile' => [null, self::P],
+        'openssl.capath' => [null, self::P],
+        'soap.wsdl_cache' => ['1', self::A],
+        'soap.wsdl_cache_dir' => ['/tmp', self::A],
+        'soap.wsdl_cache_enabled' => ['1', self::A],
+        'soap.wsdl_cache_limit' => ['5', self::A],
+        'soap.wsdl_cache_ttl' => ['86400', self::A],
+        // Xdebug 3 and 2
+        'xdebug.client_host' => ['localhost', self::A],
+        'xdebug.client_port' => ['9003', self::A],
+        'xdebug.discover_client_host' => ['0', self::A],
+        'xdebug.idekey' => ['', self::A],
+        'xdebug.log' => ['', self::A],
+        'xdebug.mode' => ['develop', self::S],
+        'xdebug.output_dir' => ['/tmp', self::A],
+        'xdebug.start_with_request' => ['default', self::A],
+        'xdebug.trigger_value' => ['', self::A],
+        'xdebug.profiler_enable' => ['0', self::A],
+        'xdebug.remote_autostart' => ['0', self::A],
+        'xdebug.remote_connect_back' => ['0', self::A],
+        'xdebug.remote_enable' => ['0', self::A],
+        'xdebug.remote_host' => ['localhost', self::A],
+        'xdebug.remote_port' => ['9000', self::A],
+        // APCu
+        'apc.enable_cli' => ['0', self::S],
+        'apc.enabled' => ['1', self::S],
+        'apc.shm_size' => ['32M', self::S],
+    ];
+
+    // Directive -> PHP version that removed it.
+    public const OBSOLETE = [
+        'allow_call_time_pass_reference' => '5.4',
+        'always_populate_raw_post_data' => '7.0',
+        'asp_tags' => '7.0',
+        'define_syslog_variables' => '5.4',
+        'highlight.bg' => '5.4',
+        'log_errors_max_len' => '8.1',
+        'magic_quotes_gpc' => '5.4',
+        'magic_quotes_runtime' => '5.4',
+        'magic_quotes_sybase' => '5.4',
+        'mbstring.func_overload' => '8.0',
+        'mbstring.script_encoding' => '5.4',
+        'mysqlnd.fetch_data_copy' => '8.1',
+        'opcache.fast_shutdown' => '7.2',
+        'opcache.inherited_hack' => '7.3',
+        'opcache.load_comments' => '7.0',
+        'register_globals' => '5.4',
+        'register_long_arrays' => '5.4',
+        'safe_mode' => '5.4',
+        'safe_mode_allowed_env_vars' => '5.4',
+        'safe_mode_exec_dir' => '5.4',
+        'safe_mode_gid' => '5.4',
+        'safe_mode_include_dir' => '5.4',
+        'safe_mode_protected_env_vars' => '5.4',
+        'session.bug_compat_42' => '5.4',
+        'session.bug_compat_warn' => '5.4',
+        'session.entropy_file' => '7.1',
+        'session.entropy_length' => '7.1',
+        'session.hash_bits_per_character' => '7.1',
+        'session.hash_function' => '7.1',
+        'sql.safe_mode' => '7.2',
+        'track_errors' => '8.0',
+        'xsl.security_prefs' => '7.0',
+        'y2k_compliance' => '5.4',
+        'zend.ze1_compatibility_mode' => '5.3',
+    ];
+
+    // Extension prefixes whose whole namespace was removed together with the extension.
+    public const OBSOLETE_PREFIXES = [
+        'mssql.' => '7.0',
+        'mysql.' => '7.0',
+        'sybase.' => '7.0',
+        'sybct.' => '7.0',
+    ];
+
+    // Directive -> PHP version that deprecated it (still honoured).
+    public const DEPRECATED = [
+        'allow_url_include' => '7.4',
+        'assert.active' => '8.3',
+        'assert.bail' => '8.3',
+        'assert.callback' => '8.3',
+        'assert.exception' => '8.3',
+        'assert.warning' => '8.3',
+        'auto_detect_line_endings' => '8.1',
+        'filter.default' => '8.1',
+        'filter.default_flags' => '8.1',
+        'session.sid_bits_per_character' => '8.4',
+        'session.sid_length' => '8.4',
+    ];
+
+    // Inside a php-fpm pool, php_admin_value for these appends to php.ini instead of replacing it.
+    public const FPM_APPENDING = ['disable_functions', 'disable_classes'];
+
+    public static function default(string $name): ?string
+    {
+        return self::KNOWN[$name][0] ?? null;
+    }
+
+    public static function isKnown(string $name): bool
+    {
+        return array_key_exists($name, self::KNOWN);
+    }
+
+    /** Whether .user.ini / .htaccess may change the directive; unknown names get the benefit of the doubt. */
+    public static function settablePerDir(string $name): bool
+    {
+        if (!array_key_exists($name, self::KNOWN)) {
+            return true;
+        }
+        return (self::KNOWN[$name][1] & self::PERDIR) !== 0;
+    }
+
+    public static function removedIn(string $name): ?string
+    {
+        if (array_key_exists($name, self::OBSOLETE)) {
+            return self::OBSOLETE[$name];
+        }
+        foreach (self::OBSOLETE_PREFIXES as $prefix => $version) {
+            if (Util::startsWith($name, $prefix)) {
+                return $version;
+            }
+        }
+        return null;
+    }
+
+    /** @return array{int, int} */
+    public static function versionTuple(string $text): array
+    {
+        $parts = explode('.', $text, 2);
+        return [(int) $parts[0], (int) ($parts[1] ?? 0)];
+    }
+}

@@ -4,17 +4,21 @@
 > **Work in progress.** Rules, severities, the CLI and report formats may change without notice.
 
 Static, read-only security audit of PHP INI configuration: `php.ini`, `conf.d/*.ini`, PHP-FPM pools,
-`.user.ini` and `.htaccess`. Nothing is executed. Python ≥ 3.9, no dependencies.
+`.user.ini` and `.htaccess`. Nothing is executed. PHP ≥ 7.4, core extensions only.
 
 Full documentation and rule reference: https://jorgsowa.github.io/php-ini-audit/
 
 ## Install
 
 ```sh
-pip install .
+composer global require jorgsowa/php-ini-audit
 ```
 
-Or run without installing: `PYTHONPATH=src python3 -m php_ini_audit`
+Or run from a checkout: `bin/php-ini-audit`. To get one file to copy onto a server:
+
+```sh
+php -d phar.readonly=0 scripts/build_phar.php   # writes build/php-ini-audit.phar
+```
 
 ## Run
 
@@ -35,7 +39,8 @@ Or paste `phpinfo()` output, php.ini, a PHP-FPM pool or .htaccess into the
 ## Test
 
 ```sh
-PYTHONPATH=src python3 -m unittest discover -s tests -t .
+composer install
+vendor/bin/phpunit
 ```
 
 ## License

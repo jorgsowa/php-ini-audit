@@ -1,0 +1,23 @@
+{
+    "name": "jorgsowa/php-ini-audit",
+    "description": "Static, read-only security audit of PHP INI configuration",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["php", "php.ini", "security", "audit", "hardening", "php-fpm"],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "psr-4": {"PhpIniAudit\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {"PhpIniAudit\\Tests\\": "tests/"}
+    },
+    "bin": ["bin/php-ini-audit"],
+    "config": {
+        "sort-packages": true
+    }
+}

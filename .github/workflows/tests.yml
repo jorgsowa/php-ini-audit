@@ -10,33 +10,39 @@ permissions:
 
 jobs:
   test:
-    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    name: PHP ${{ matrix.php }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        php: ["7.4", "8.0", "8.1", "8.2", "8.3", "8.4", "8.5"]
         include:
           - os: macos-latest
-            python-version: "3.14"
+            php: "8.5"
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: shivammathur/setup-php@v2
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install package
-        run: python -m pip install .
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-progress
+      # setup-php installs php-cgi; parity runs only in the dedicated job.
       - name: Unit and integration tests
-        run: python -m unittest discover -s tests -t . -v
+        run: vendor/bin/phpunit --exclude-group parity
       - name: CLI smoke test
         run: |
-          php-ini-audit --version
-          php-ini-audit rules > /dev/null
-          php-ini-audit tests/fixtures/hardened/php.ini --fail-on low
-          php-ini-audit --root tests/fixtures/debian --format sarif -o report.sarif
-          python -c "import json; assert json.load(open('report.sarif'))['runs'][0]['results']"
+          bin/php-ini-audit --version
+          bin/php-ini-audit rules > /dev/null
+          bin/php-ini-audit tests/fixtures/hardened/php.ini --fail-on low
+          bin/php-ini-audit --root tests/fixtures/debian --format sarif -o report.sarif
+          php -r '$r = json_decode(file_get_contents("report.sarif"), true); exit($r["runs"][0]["results"] ? 0 : 1);'
+      - name: PHAR smoke test
+        run: |
+          php -d phar.readonly=0 scripts/build_phar.php
+          php build/php-ini-audit.phar --root tests/fixtures/debian > /dev/null
 
   php-parity:
     name: Parity with PHP ${{ matrix.php }}
@@ -49,16 +55,13 @@ jobs:
         php: ["8.5"]
     steps:
       - uses: actions/checkout@v7
-      # setup-python's toolcache builds target the Ubuntu runner, not the Debian-based PHP image.
-      - name: Install Python
-        run: |
-          apt-get update -q -o Acquire::Retries=5
-          apt-get install -y -q -o Acquire::Retries=5 --no-install-recommends python3
+      # The official image has no composer, git or unzip; the PHPUnit PHAR needs none of them.
+      - name: Install PHPUnit
+        run: php -r 'copy("https://phar.phpunit.de/phpunit-9.6.phar", "/usr/local/bin/phpunit");' && chmod +x /usr/local/bin/phpunit
       - name: Parity tests
         env:
           PHP_CGI: /usr/local/bin/php-cgi
-          PYTHONPATH: src
-        run: python3 -m unittest tests.test_php_parity -v
+        run: phpunit tests/PhpParityTest.php
 
   docker-images:
     name: Real PHP images
@@ -66,11 +69,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: shivammathur/setup-php@v2
         with:
-          python-version: "3.13"
+          php-version: "8.4"
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-progress
       - name: Scan official, Alpine and Debian images
         env:
           PHP_INI_AUDIT_DOCKER: "1"
-          PYTHONPATH: src
-        run: python -m unittest tests.test_docker_images -v
+        run: vendor/bin/phpunit tests/DockerImagesTest.php

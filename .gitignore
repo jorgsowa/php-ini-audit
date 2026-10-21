@@ -1,9 +1,6 @@
-__pycache__/
-*.py[cod]
-*.egg-info/
 build/
-dist/
-.venv/
-.pytest_cache/
 ROADMAP.md
-docs/assets/php_ini_audit.zip
+vendor/
+composer.lock
+.phpunit.result.cache
+docs/assets/php-ini-audit.php

@@ -1,5 +1,5 @@
 (function () {
-  var PYODIDE = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+  var PHP_WASM = "https://cdn.jsdelivr.net/npm/php-wasm@0.2.0/";
   var SEVERITIES = ["critical", "high", "medium", "low", "info"];
   var form = document.getElementById("scan-form");
   var input = document.getElementById("scan-input");
@@ -14,30 +14,32 @@
   var results = document.getElementById("results");
   var runtime = null;
 
-  function loadScript(src) {
-    return new Promise(function (resolve, reject) {
-      var script = document.createElement("script");
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = function () { reject(new Error("could not load " + src)); };
-      document.head.appendChild(script);
-    });
-  }
+  var SCAN = [
+    "<?php",
+    "if (!class_exists('PhpIniAudit\\\\Paste', false)) require '/php-ini-audit.php';",
+    "try {",
+    "  $in = json_decode(file_get_contents('/input.json'), true);",
+    "  $options = new PhpIniAudit\\Options();",
+    "  $options->profile = $in['profile'];",
+    "  $options->sapi = $in['sapi'] === '' ? null : $in['sapi'];",
+    "  $options->phpVersion = PhpIniAudit\\Paste::parseVersion($in['version']);",
+    "  [$kind, $result] = PhpIniAudit\\Paste::audit($in['text'], $in['kind'] === '' ? null : $in['kind'], $options);",
+    "  $out = ['kind' => $kind, 'label' => PhpIniAudit\\Paste::KINDS[$kind][0],",
+    "    'report' => json_decode(PhpIniAudit\\Report::renderJson($result, $in['profile']))];",
+    "} catch (Throwable $e) {",
+    "  $out = ['error' => $e->getMessage()];",
+    "}",
+    "file_put_contents('/output.json', json_encode($out));"
+  ].join("\n");
 
   function scanner() {
     if (!runtime) {
-      runtime = loadScript(PYODIDE + "pyodide.js")
-        .then(function () { return Promise.all([loadPyodide({ indexURL: PYODIDE }), fetch("assets/php_ini_audit.zip")]); })
+      runtime = Promise.all([import(PHP_WASM + "PhpWeb.mjs"), fetch("assets/php-ini-audit.php")])
         .then(function (loaded) {
           if (!loaded[1].ok) throw new Error("could not load the scanner bundle");
-          return loaded[1].arrayBuffer().then(function (bundle) {
-            var py = loaded[0];
-            py.FS.writeFile("/php_ini_audit.zip", new Uint8Array(bundle));
-            py.runPython(
-              "import json, sys\nsys.path.insert(0, '/php_ini_audit.zip')\n" +
-              "from php_ini_audit import paste, report\nfrom php_ini_audit.engine import Options"
-            );
-            return py;
+          return loaded[1].text().then(function (bundle) {
+            var php = new loaded[0].PhpWeb({ version: "8.4" });
+            return php.writeFile("/php-ini-audit.php", bundle).then(function () { return php; });
           });
         });
       runtime.catch(function () { runtime = null; });
@@ -69,7 +71,8 @@
     targets.forEach(function (t) { t.files.forEach(function (f) { if (files.indexOf(f) === -1) files.push(f); }); });
     document.getElementById("target").replaceChildren(
       row("Input", scan.label + (detected ? " (detected)" : "")),
-      row("PHP version", first.php_version ? first.php_version + (first.php_version_source ? " from " + first.php_version_source : "") : "unknown"),
+      row("PHP version", !first.php_version ? "unknown — enter it to match known vulnerabilities"
+        : first.php_version + (first.php_version_source === "--php-version" ? " (entered)" : " from " + first.php_version_source)),
       row("SAPI", first.sapi),
       row(targets.length > 1 ? "Configurations" : "Configuration", targets.map(function (t) { return t.name; }).join("\n")),
       row("Files", files.length ? files.join(", ") : "none")
@@ -127,20 +130,16 @@
     button.disabled = true;
     status.textContent = runtime ? "Scanning…" : "Loading the scanner (first scan only)…";
     return scanner()
-      .then(function (py) {
+      .then(function (php) {
         status.textContent = "Scanning…";
-        py.globals.set("pasted", text);
-        py.globals.set("kind", kind.value);
-        py.globals.set("sapi", sapi.value);
-        py.globals.set("version", version.value);
-        py.globals.set("profile", profile.value);
-        var json = py.runPython(
-          "options = Options(profile=profile, sapi=sapi or None, php_version=paste.parse_version(version))\n" +
-          "detected, result = paste.audit(pasted, kind or None, options)\n" +
-          "json.dumps({'kind': detected, 'label': paste.KINDS[detected][0], " +
-          "'report': json.loads(report.render_json(result, profile))})"
-        );
-        var result = JSON.parse(json);
+        var request = { text: text, kind: kind.value, sapi: sapi.value, version: version.value, profile: profile.value };
+        return php.writeFile("/input.json", JSON.stringify(request))
+          .then(function () { return php.run(SCAN); })
+          .then(function () { return php.readFile("/output.json"); });
+      })
+      .then(function (output) {
+        var result = JSON.parse(new TextDecoder().decode(output));
+        if (result.error) throw new Error(result.error);
         render(result, !kind.value);
         var count = result.report.findings.length;
         status.textContent = count + (count === 1 ? " finding" : " findings");

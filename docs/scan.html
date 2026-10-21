@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/pyodide/v0.26.4/full/ 'wasm-unsafe-eval'; connect-src 'self' https://cdn.jsdelivr.net/pyodide/v0.26.4/full/; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/php-wasm@0.2.0/ 'wasm-unsafe-eval'; connect-src 'self' https://cdn.jsdelivr.net/npm/php-wasm@0.2.0/; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Browser scanner — php-ini-audit</title>
   <meta name="description" content="Paste phpinfo() output, php.ini, .user.ini, a PHP-FPM pool or .htaccess and audit it in your browser. Nothing is uploaded.">
   <link rel="stylesheet" href="assets/style.css">
@@ -30,7 +30,7 @@
 
   <div class="note">
     <p><b>Nothing leaves your browser.</b> The scanner runs locally in WebAssembly
-      (<a href="https://pyodide.org/">Pyodide</a>) and sends nothing back.</p>
+      (<a href="https://github.com/seanmorris/php-wasm">php-wasm</a>) and sends nothing back.</p>
   </div>
 
   <h2 id="scan">Scan <a class="anchor" href="#scan">#</a></h2>

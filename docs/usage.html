@@ -27,10 +27,13 @@
   <p class="lead">Install, point it at a host, a directory, an image or a single file, and choose the report format.</p>
 
   <h2 id="install">Install <a class="anchor" href="#install">#</a></h2>
-  <p>Python 3.9 or newer, standard library only.</p>
-<pre><code>pip install git+https://github.com/jorgsowa/php-ini-audit
+  <p>PHP 7.4 or newer, core extensions only.</p>
+<pre><code>composer global require jorgsowa/php-ini-audit
 <span class="c"># or, from a checkout, without installing:</span>
-PYTHONPATH=src python3 -m php_ini_audit --help</code></pre>
+bin/php-ini-audit --help
+<span class="c"># or as one file to copy onto a server:</span>
+php -d phar.readonly=0 scripts/build_phar.php
+php build/php-ini-audit.phar --help</code></pre>
 
   <h2 id="targets">Choosing what to audit <a class="anchor" href="#targets">#</a></h2>
   <div class="table-scroll">
@@ -125,10 +128,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: "3.12"}
-      - run: pip install git+https://github.com/jorgsowa/php-ini-audit
-      - run: php-ini-audit docker/php/ --format sarif -o php-ini.sarif --fail-on high
+      - uses: shivammathur/setup-php@v2
+        with: {php-version: "8.4"}
+      - run: composer global require jorgsowa/php-ini-audit
+      - run: ~/.composer/vendor/bin/php-ini-audit docker/php/ --format sarif -o php-ini.sarif --fail-on high
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
         with: {sarif_file: php-ini.sarif}</code></pre>

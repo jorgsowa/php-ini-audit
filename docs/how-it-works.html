@@ -28,7 +28,7 @@
 
   <h2 id="safety">Safety model <a class="anchor" href="#safety">#</a></h2>
   <ul>
-    <li><strong>No execution.</strong> The tool never runs <code>php</code>, a shell or any other process, never calls <code>eval</code>, and never opens a network connection. <code>tests/test_safety.py</code> walks the source syntax tree and fails if such a call or import appears.</li>
+    <li><strong>No execution.</strong> The tool never runs <code>php</code>, a shell or any other process, never calls <code>eval</code>, and never opens a network connection. <code>tests/SafetyTest.php</code> walks the source tokens and fails if such a call appears.</li>
     <li><strong>Read-only file access.</strong> Only regular files are opened. FIFOs, devices and sockets are refused so that a planted <code>php.ini</code> FIFO cannot hang the scan. Files over 4&nbsp;MiB or containing binary data are skipped with a warning.</li>
     <li><strong>Confined roots.</strong> With <code>--root</code>, every symlink is resolved component by component inside the root. An absolute link such as <code>php.ini → /etc/shadow</code> resolves to <code>&lt;root&gt;/etc/shadow</code>, never to the host file.</li>
     <li><strong>Metadata only for paths.</strong> Paths referenced by settings are inspected with <code>stat()</code>; their contents are never read.</li>
