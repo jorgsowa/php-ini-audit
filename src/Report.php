@@ -101,76 +101,24 @@ final class Report
         return $finding->fromDefault ? 'built-in default' : '';
     }
 
-    public static function renderText(AuditResult $result, string $profile, bool $color = false): string
+    /**
+     * @param int $minSeverity findings below this are counted in the summary but not listed
+     * @param string $groupBy "target" lists findings per configuration, "rule" lists configurations per rule
+     */
+    public static function renderText(AuditResult $result, string $profile, bool $color = false,
+        int $minSeverity = Severity::INFO, string $groupBy = 'target'): string
     {
-        $paint = static function (int $severity, string $text) use ($color): string {
-            return $color ? self::COLORS[$severity] . $text . self::RESET : $text;
-        };
+        $shown = array_values(array_filter($result->findings, static function (Finding $f) use ($minSeverity): bool {
+            return $f->severity >= $minSeverity;
+        }));
+        $hidden = count($result->findings) - count($shown);
 
+        $data = self::summary($result);
         $lines = [sprintf('php-ini-audit %s  profile=%s  path-checks=%s', Version::VERSION, $profile,
             $result->pathChecks ? 'on' : 'off')];
         if (!$result->targets) {
             $lines[] = 'No PHP configuration found. Pass paths, --ini or --root.';
         }
-        foreach ($result->warnings as $warning) {
-            $lines[] = "warning: $warning";
-        }
-
-        $grouped = [];
-        foreach ($result->findings as $finding) {
-            $grouped[$finding->target][] = $finding;
-        }
-
-        $targetNames = [];
-        $describe = [];
-        foreach ($result->targets as $target) {
-            $targetNames[] = $target->name();
-            $describe[$target->name()] = $target;
-        }
-        $fileOnly = array_values(array_diff(array_map('strval', array_keys($grouped)), $targetNames));
-        sort($fileOnly, SORT_STRING);
-        $targetNames = array_merge($targetNames, array_values(array_unique($fileOnly)));
-        foreach ($targetNames as $name) {
-            $findings = $grouped[$name] ?? [];
-            $target = $describe[$name] ?? null;
-            $lines[] = '';
-            $header = "== $name";
-            if ($target !== null) {
-                $version = Versions::formatVersion($target->phpVersion);
-                if ($target->versionSource !== null && $target->versionSource !== '' && $target->versionSource !== 'path') {
-                    $version .= " from {$target->versionSource}";
-                }
-                $header .= "  [sapi {$target->sapi}, php $version]";
-            } else {
-                $header .= '  [file checks]';
-            }
-            $lines[] = $header;
-            if ($target !== null && $target->files && ($target->overlay === null || $target->overlay === '')) {
-                $lines[] = '   files: ' . implode(', ', $target->files);
-            }
-            if ($findings) {
-                $parts = [];
-                foreach (self::severityCounts($findings) as $severity => $count) {
-                    $parts[] = "$count $severity";
-                }
-                $lines[] = '   ' . implode(', ', $parts);
-            } else {
-                $lines[] = '   no findings';
-            }
-            foreach ($findings as $finding) {
-                $label = $paint($finding->severity, self::pad(strtoupper(Severity::name($finding->severity)), 8));
-                $lines[] = sprintf('  %s %s %s  (confidence %s)', $label, self::pad($finding->ruleId, 14),
-                    $finding->title, Confidence::name($finding->confidence));
-                $lines[] = "           {$finding->message}";
-                $where = self::where($finding);
-                if ($where !== '') {
-                    $lines[] = "           at $where";
-                }
-                $lines[] = "           fix: {$finding->recommendation}";
-            }
-        }
-
-        $data = self::summary($result);
         $lines[] = '';
         $lines[] = 'Summary';
         $lines[] = sprintf('  %d configuration(s), %d overlay(s), %d file(s), %d rules', $data['configurations'],
@@ -187,7 +135,172 @@ final class Report
             }
             $lines[] = '  category: ' . implode('  ', $parts);
         }
+        if ($hidden > 0) {
+            $names = [];
+            foreach (self::severityCounts($result->findings) as $severity => $count) {
+                if ($count > 0 && Severity::parse($severity) < $minSeverity) {
+                    $names[] = $severity;
+                }
+            }
+            $lines[] = sprintf('  %d %s finding(s) hidden; show them with --min-severity %s', $hidden,
+                implode('/', $names), end($names));
+        }
+        foreach ($result->warnings as $warning) {
+            $lines[] = "warning: $warning";
+        }
+
+        $describe = [];
+        foreach ($result->targets as $target) {
+            $describe[$target->name()] = $target;
+        }
+        if ($groupBy === 'rule') {
+            array_push($lines, ...self::textByRule($shown, $describe, $color));
+        } else {
+            array_push($lines, ...self::textByTarget($shown, $describe, $color, $minSeverity));
+        }
         return implode("\n", $lines) . "\n";
+    }
+
+    /** One line: severity counts and what was audited. */
+    public static function renderSummaryLine(AuditResult $result): string
+    {
+        $data = self::summary($result);
+        $parts = [];
+        foreach ($data['by_severity'] as $severity => $count) {
+            $parts[] = "$count $severity";
+        }
+        return sprintf("%s in %d configuration(s), %d overlay(s), %d file(s)\n", implode(', ', $parts),
+            $data['configurations'], $data['overlays'], $data['files']);
+    }
+
+    private static function targetHeader(string $name, ?Target $target): string
+    {
+        if ($target === null) {
+            return "$name  [file checks]";
+        }
+        $version = Versions::formatVersion($target->phpVersion);
+        // Overlays share their base's version, which the base header already attributes.
+        $isOverlay = $target->overlay !== null && $target->overlay !== '';
+        if (!$isOverlay && $target->versionSource !== null && $target->versionSource !== ''
+            && $target->versionSource !== 'path') {
+            $version .= " from {$target->versionSource}";
+        }
+        return "$name  [sapi {$target->sapi}, php $version]";
+    }
+
+    private static function label(Finding $finding, bool $color): string
+    {
+        $text = self::pad(strtoupper(Severity::name($finding->severity)), 8);
+        return $color ? self::COLORS[$finding->severity] . $text . self::RESET : $text;
+    }
+
+    /** Confidence is high for most findings, so only the exceptions are marked. */
+    private static function confidenceMarker(Finding $finding): string
+    {
+        return $finding->confidence === Confidence::HIGH ? '' : '  (' . Confidence::name($finding->confidence)
+            . ' confidence)';
+    }
+
+    /**
+     * @param list<Finding> $findings
+     * @param array<string, Target> $describe
+     * @return list<string>
+     */
+    private static function textByTarget(array $findings, array $describe, bool $color, int $minSeverity): array
+    {
+        $grouped = [];
+        foreach ($findings as $finding) {
+            $grouped[$finding->target][] = $finding;
+        }
+        $targetNames = array_map('strval', array_keys($describe));
+        $fileOnly = array_values(array_diff(array_map('strval', array_keys($grouped)), $targetNames));
+        sort($fileOnly, SORT_STRING);
+        $targetNames = array_merge($targetNames, array_values(array_unique($fileOnly)));
+
+        $lines = [];
+        foreach ($targetNames as $name) {
+            $targetFindings = $grouped[$name] ?? [];
+            $target = $describe[$name] ?? null;
+            $lines[] = '';
+            $lines[] = '== ' . self::targetHeader($name, $target);
+            if ($target !== null && $target->files && ($target->overlay === null || $target->overlay === '')) {
+                $lines[] = '   files: ' . implode(', ', $target->files);
+            }
+            if ($targetFindings) {
+                $parts = [];
+                foreach (self::severityCounts($targetFindings) as $severity => $count) {
+                    if (Severity::parse($severity) >= $minSeverity) {
+                        $parts[] = "$count $severity";
+                    }
+                }
+                $lines[] = '   ' . implode(', ', $parts);
+            } else {
+                $lines[] = '   no findings';
+            }
+            foreach ($targetFindings as $finding) {
+                $lines[] = sprintf('  %s %s %s%s', self::label($finding, $color), self::pad($finding->ruleId, 14),
+                    $finding->title, self::confidenceMarker($finding));
+                $lines[] = "           {$finding->message}";
+                $where = self::where($finding);
+                if ($where !== '') {
+                    $lines[] = "           at $where";
+                }
+                $lines[] = "           fix: {$finding->recommendation}";
+            }
+        }
+        return $lines;
+    }
+
+    /**
+     * @param list<Finding> $findings
+     * @param array<string, Target> $describe
+     * @return list<string>
+     */
+    private static function textByRule(array $findings, array $describe, bool $color): array
+    {
+        $lines = [];
+        if ($describe) {
+            $lines[] = '';
+            $lines[] = '== Configurations';
+            foreach ($describe as $name => $target) {
+                $lines[] = '   ' . self::targetHeader((string) $name, $target);
+            }
+        }
+        // A rule can fire at different severities depending on context; each severity gets its own group.
+        $groups = [];
+        foreach ($findings as $finding) {
+            $groups["{$finding->severity}|{$finding->ruleId}"][] = $finding;
+        }
+        foreach ($groups as $group) {
+            $first = $group[0];
+            $lines[] = '';
+            $lines[] = sprintf('  %s %s %s  (%d)', self::label($first, $color), self::pad($first->ruleId, 14),
+                $first->title, count($group));
+            $messages = array_unique(array_map(static function (Finding $f): string {
+                return $f->message;
+            }, $group));
+            $shared = count($messages) === 1;
+            if ($shared) {
+                $lines[] = "           {$first->message}";
+            }
+            $lines[] = "           fix: {$first->recommendation}";
+            foreach ($group as $finding) {
+                $where = self::where($finding);
+                $entry = "           - {$finding->target}";
+                if ($where !== '' && $where !== $finding->target) {
+                    $entry .= "  at $where";
+                }
+                $lines[] = $entry . self::confidenceMarker($finding);
+                if (!$shared) {
+                    $lines[] = "             {$finding->message}";
+                }
+            }
+        }
+        if (!$groups) {
+            $lines[] = '';
+            $lines[] = '   no findings';
+        }
+        return $lines;
     }
 
     public static function renderJson(AuditResult $result, string $profile): string

@@ -43,7 +43,8 @@ usage: php-ini-audit scan [-h] [--root ROOT] [--ini INI] [--scan-dir SCAN_DIR]
                           [--path-checks {auto,on,off}]
                           [--min-severity MIN_SEVERITY] [--only ONLY]
                           [--skip SKIP] [--format {text,json,sarif,markdown}]
-                          [-o OUTPUT] [--fail-on FAIL_ON] [--no-color]
+                          [--group-by {target,rule}] [--summary] [-o OUTPUT]
+                          [--fail-on FAIL_ON] [--no-color]
                           [paths ...]
 
 TXT;
@@ -85,10 +86,15 @@ TXT;
                         inspect permissions of referenced paths; auto = on for
                         system/--root scans
   --min-severity MIN_SEVERITY
-                        hide findings below this
+                        hide findings below this (default low for text, info
+                        otherwise)
   --only ONLY           rule id or category (e.g. SESS); repeatable
   --skip SKIP           rule id or category to skip; repeatable
   --format {text,json,sarif,markdown}
+  --group-by {target,rule}
+                        text: list findings per configuration (default) or
+                        per rule
+  --summary             text: print only a one-line summary
   -o, --output OUTPUT   write the report to this file
   --fail-on FAIL_ON     exit 1 when a finding at or above this severity exists
   --no-color
@@ -163,12 +169,14 @@ TXT;
             ['dest' => 'php_version', 'flags' => ['--php-version'], 'type' => 'version'],
             ['dest' => 'path_checks', 'flags' => ['--path-checks'], 'choices' => ['auto', 'on', 'off'],
                 'default' => 'auto'],
-            ['dest' => 'min_severity', 'flags' => ['--min-severity'], 'type' => 'severity',
-                'default' => Severity::INFO],
+            ['dest' => 'min_severity', 'flags' => ['--min-severity'], 'type' => 'severity'],
             ['dest' => 'only', 'flags' => ['--only'], 'append' => true],
             ['dest' => 'skip', 'flags' => ['--skip'], 'append' => true],
             ['dest' => 'format', 'flags' => ['--format'], 'choices' => ['text', 'json', 'sarif', 'markdown'],
                 'default' => 'text'],
+            ['dest' => 'group_by', 'flags' => ['--group-by'], 'choices' => ['target', 'rule'],
+                'default' => 'target'],
+            ['dest' => 'summary', 'flags' => ['--summary'], 'action' => 'store_true'],
             ['dest' => 'output', 'flags' => ['-o', '--output']],
             ['dest' => 'fail_on', 'flags' => ['--fail-on'], 'type' => 'severity'],
             ['dest' => 'no_color', 'flags' => ['--no-color'], 'action' => 'store_true']
@@ -547,6 +555,10 @@ TXT;
 
     private static function cmdScan(array $args, FileSystem $fs): int
     {
+        if ($args['summary'] && $args['format'] !== 'text') {
+            self::err("--summary only applies to --format text\n");
+            return self::EXIT_USAGE;
+        }
         $registry = Registry::all();
         $categories = [];
         foreach ($registry as $rule) {
@@ -563,7 +575,7 @@ TXT;
         $options->profile = $args['profile'];
         $options->sapi = $args['sapi'];
         $options->phpVersion = $args['php_version'];
-        $options->minSeverity = $args['min_severity'];
+        $options->minSeverity = $args['min_severity'] ?? Severity::INFO;
         $options->only = $args['only'];
         $options->skip = $args['skip'];
         $phpinfo = $args['phpinfo'];
@@ -630,9 +642,12 @@ TXT;
             $text = Report::renderSarif($result, $args['profile']);
         } elseif ($args['format'] === 'markdown') {
             $text = Report::renderMarkdown($result, $args['profile']);
+        } elseif ($args['summary']) {
+            $text = Report::renderSummaryLine($result);
         } else {
             $color = !$args['no_color'] && !$toFile && self::isatty() && getenv('NO_COLOR') === false;
-            $text = Report::renderText($result, $args['profile'], $color);
+            $text = Report::renderText($result, $args['profile'], $color, $args['min_severity'] ?? Severity::LOW,
+                $args['group_by']);
         }
 
         if ($toFile) {

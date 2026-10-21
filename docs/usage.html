@@ -65,10 +65,12 @@ php-ini-audit --root rootfs</code></pre>
         <tr><td><code>--sapi NAME</code></td><td><code>cli</code>, <code>fpm</code>, <code>apache2</code>, <code>cgi</code>, <code>litespeed</code>, <code>embed</code> or <code>unknown</code>. Normally inferred from the path; <code>unknown</code> is treated as web-facing.</td></tr>
         <tr><td><code>--php-version X.Y[.Z]</code></td><td>Exact version for <a href="how-it-works.html#versions">known-vulnerability checks</a>. Otherwise it is read from <code>php_version.h</code> or package databases on host and <code>--root</code> scans, or the branch is inferred from the path (<code>/etc/php/8.2/</code>, <code>php82</code>, <code>ea-php81</code>).</td></tr>
         <tr><td><code>--path-checks auto|on|off</code></td><td>Inspect permissions of paths named in the config. <code>auto</code> enables it for host and <code>--root</code> scans, not for copied files whose paths would point at the wrong machine.</td></tr>
-        <tr><td><code>--min-severity LEVEL</code></td><td>Hide findings below <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code> or <code>info</code>.</td></tr>
+        <tr><td><code>--min-severity LEVEL</code></td><td>Hide findings below <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code> or <code>info</code>. Default <code>low</code> for text, which counts hidden info findings in the summary, and <code>info</code> for the other formats.</td></tr>
         <tr><td><code>--only ID|CATEGORY</code></td><td>Run only these rules; repeatable (<code>--only SESS --only EXEC-001</code>).</td></tr>
         <tr><td><code>--skip ID|CATEGORY</code></td><td>Skip rules; repeatable.</td></tr>
         <tr><td><code>--format text|json|sarif|markdown</code></td><td>Report format; text is colored on a terminal unless <code>--no-color</code> or <code>NO_COLOR</code> is set.</td></tr>
+        <tr><td><code>--group-by target|rule</code></td><td>Text only. <code>target</code> (default) lists findings per configuration; <code>rule</code> lists each rule once with the configurations it affects, which reads better on hosts with several PHP versions.</td></tr>
+        <tr><td><code>--summary</code></td><td>Text only. Print one line of severity counts instead of the report.</td></tr>
         <tr><td><code>-o, --output FILE</code></td><td>Write the report to a file.</td></tr>
         <tr><td><code>--fail-on LEVEL</code></td><td>Exit with status 1 when any finding is at or above LEVEL.</td></tr>
         <tr><td><code>--max-depth N</code></td><td>Directory walk depth, default 12.</td></tr>
@@ -80,7 +82,7 @@ php-ini-audit --root rootfs</code></pre>
   <p>Each finding has:</p>
   <ul>
     <li><strong>Severity</strong>: <span class="sev sev-critical">critical</span> <span class="sev sev-high">high</span> <span class="sev sev-medium">medium</span> <span class="sev sev-low">low</span> <span class="sev sev-info">info</span>. A rule has a default severity, but an individual finding can be raised or lowered by context. For example, <code>allow_url_include</code> is critical, and drops to high while <code>allow_url_fopen</code> is Off.</li>
-    <li><strong>Confidence</strong>: how sure the static view can be. It is low for heuristics (web-root detection by directory name) and for values that contain <code>${ENV}</code> references.</li>
+    <li><strong>Confidence</strong>: how sure the static view can be. It is low for heuristics (web-root detection by directory name) and for values that contain <code>${ENV}</code> references. The text format marks only medium and low confidence.</li>
     <li><strong>Location</strong>: the file and line of the effective value, or <code>built-in default</code>.</li>
     <li><strong>Target</strong>: the effective configuration it belongs to, such as <code>/etc/php/8.3/fpm/php.ini + pool [www] (…)</code>.</li>
   </ul>

@@ -28,6 +28,8 @@ php-ini-audit /etc/php/8.3/fpm/php.ini       # audit one file
 php-ini-audit --root /mnt/container-rootfs   # audit an extracted image or mounted disk
 php-ini-audit --format sarif -o report.sarif # SARIF for GitHub code scanning
 php-ini-audit --fail-on high                 # exit 1 on high or critical findings
+php-ini-audit --group-by rule                # each rule once, with the configs it affects
+php-ini-audit --summary                      # one line of severity counts
 php -i | php-ini-audit --phpinfo -           # audit the values a running PHP reports
 ```
 

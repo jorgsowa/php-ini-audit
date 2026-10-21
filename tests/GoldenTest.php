@@ -140,7 +140,7 @@ final class GoldenTest extends TestCase
         foreach ($ruleIds as $ruleId) {
             $this->assertStringContainsString("| $ruleId |", $out);
         }
-        [, $out] = Helpers::runCli(...array_merge($args, ['--format', 'text', '--no-color']));
+        [, $out] = Helpers::runCli(...array_merge($args, ['--format', 'text', '--no-color', '--min-severity', 'info']));
         $this->assertStringNotContainsString("\033[", $out);
         foreach ($ruleIds as $ruleId) {
             $this->assertStringContainsString($ruleId, $out);

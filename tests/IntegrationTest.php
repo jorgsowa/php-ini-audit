@@ -167,6 +167,55 @@ final class IntegrationTest extends TestCase
         $this->assertStringContainsString('/etc/php/8.2/fpm/pool.d/www.conf', $out);
     }
 
+    public function testTextHidesInfoByDefault(): void
+    {
+        $debian = Helpers::FIXTURES . '/debian';
+        [, $json] = Helpers::runCli('--root', $debian, '--format', 'json');
+        $info = self::json($json)['summary']['by_severity']['info'];
+        $this->assertGreaterThan(0, $info);
+        [, $out] = Helpers::runCli('--root', $debian, '--no-color');
+        $this->assertStringNotContainsString('  INFO ', $out);
+        $this->assertStringContainsString("$info info finding(s) hidden; show them with --min-severity info", $out);
+        $this->assertLessThan(strpos($out, '== '), strpos($out, 'Summary'));
+        [, $out] = Helpers::runCli('--root', $debian, '--no-color', '--min-severity', 'info');
+        $this->assertStringContainsString('  INFO ', $out);
+        $this->assertStringNotContainsString('hidden', $out);
+    }
+
+    public function testTextMarksOnlyReducedConfidence(): void
+    {
+        [, $out] = Helpers::runCli('--root', Helpers::FIXTURES . '/debian', '--no-color');
+        $this->assertStringNotContainsString('confidence high', $out);
+        $this->assertStringNotContainsString('(high confidence)', $out);
+        $this->assertStringContainsString('(low confidence)', $out);
+    }
+
+    public function testTextNamesVersionSourceOncePerInstallation(): void
+    {
+        [, $out] = Helpers::runCli('--root', Helpers::FIXTURES . '/debian', '--no-color', '--min-severity', 'info');
+        $this->assertSame(2, substr_count($out, 'from /var/lib/dpkg/status'));
+    }
+
+    public function testGroupByRule(): void
+    {
+        [$code, $out] = Helpers::runCli('--root', Helpers::FIXTURES . '/debian', '--no-color', '--group-by', 'rule');
+        $this->assertSame(0, $code);
+        $this->assertSame(1, preg_match_all('/^  CRITICAL VULN-003 .*\(2\)$/m', $out));
+        $this->assertStringContainsString("           - /etc/php/8.2/cli/php.ini  (low confidence)\n", $out);
+        $this->assertStringContainsString("           - /etc/php/8.2/fpm/php.ini  (low confidence)\n", $out);
+    }
+
+    public function testSummaryLine(): void
+    {
+        [$code, $out] = Helpers::runCli('--root', Helpers::FIXTURES . '/debian', '--summary');
+        $this->assertSame(0, $code);
+        $this->assertMatchesRegularExpression(
+            '/^\d+ critical, \d+ high, \d+ medium, \d+ low, \d+ info in 2 configuration\(s\), 2 overlay\(s\), '
+            . '5 file\(s\)\n\z/', $out);
+        [$code] = Helpers::runCli('--root', Helpers::FIXTURES . '/debian', '--summary', '--format', 'json');
+        $this->assertSame(2, $code);
+    }
+
     // ProcessTest: the installed entry point, run as a separate process.
 
     /** @return array{0: int, 1: string, 2: string} [exit code, stdout, stderr] */

@@ -466,7 +466,7 @@ final class Vulnerabilities
             $message = 'PHP ' . Versions::formatVersion($version) . ' is affected (fixed in '
                 . $advisory->fixedFor($version) . "); $reason";
             if ($ctx->versionBackports) {
-                $message .= "; version from {$ctx->versionSource}, which may carry a backported fix";
+                $message .= '; the distribution build may carry a backported fix';
                 $confidence = Confidence::LOW;
             }
             yield new Hit($message, $evidence, null, $confidence);
@@ -507,15 +507,13 @@ final class Vulnerabilities
         }
         [$endText, $lastRelease] = self::SUPPORT[$key];
         $end = new \DateTimeImmutable($endText, $today->getTimezone());
-        $source = $ctx->versionSource !== null && $ctx->versionSource !== ''
-            ? " (version from {$ctx->versionSource})" : '';
         $days = (int) $today->diff($end)->format('%r%a');
         if ($days < 0) {
             $last = $lastRelease !== null && $lastRelease !== '' ? "; last release $lastRelease" : '';
-            yield new Hit("PHP {$branch[0]}.{$branch[1]} security support ended on $endText$last$source");
+            yield new Hit("PHP {$branch[0]}.{$branch[1]} security support ended on $endText$last");
         } elseif ($days <= self::EOL_WARNING_DAYS) {
             yield new Hit(
-                "PHP {$branch[0]}.{$branch[1]} security support ends on $endText ($days days)$source",
+                "PHP {$branch[0]}.{$branch[1]} security support ends on $endText ($days days)",
                 [],
                 Severity::LOW
             );
@@ -616,7 +614,7 @@ final class Vulnerabilities
             . "$latestFix: " . implode(', ', array_column($affected, 1));
         $confidence = Confidence::HIGH;
         if ($ctx->versionBackports) {
-            $message .= "; version from {$ctx->versionSource}, which may carry backported fixes";
+            $message .= '; the distribution build may carry backported fixes';
             $confidence = Confidence::LOW;
         }
         yield new Hit($message, [], $affected[0][0], $confidence);
