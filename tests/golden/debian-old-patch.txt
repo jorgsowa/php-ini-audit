@@ -20,6 +20,8 @@ critical high   CVE-2026-109619 session.upload_progress.enabled=1  at default  i
 critical high   EXEC-001       allow_url_include=1  at /etc/php/8.2/fpm/php.ini:22  in /etc/php/8.2/fpm/php.ini
 critical high   EXEC-003       auto_prepend_file=php://input  at /etc/php/8.2/fpm/php.ini:25  in /etc/php/8.2/fpm/php.ini
 critical high   EXT-001        xdebug.mode=debug,develop  at /etc/php/8.2/fpm/conf.d/20-xdebug.ini:2  in /etc/php/8.2/fpm/php.ini
+critical high   VULN-003       -=-  at -  in /etc/php/8.2/cli/php.ini
+critical high   VULN-003       -=-  at -  in /etc/php/8.2/fpm/php.ini
 critical medium FPM-001        listen=0.0.0.0:9000  at /etc/php/8.2/fpm/pool.d/www.conf:4  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
 critical low    CVE-2026-109618 memory_limit=${PHP_MEMORY_LIMIT}  at /etc/php/8.2/fpm/conf.d/99-override.ini:3  in /etc/php/8.2/fpm/php.ini
 high     high   CVE-2026-91766 allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
@@ -109,4 +111,4 @@ info     low    ERR-010        disable_functions=exec,passthru,shell_exec,system
 info     low    FS-009         file_uploads=1  at /etc/php/8.2/fpm/php.ini:19  in /etc/php/8.2/fpm/php.ini
 info     low    OPC-003        opcache.validate_permission=0  at default  in /etc/php/8.2/fpm/php.ini
 [summary]
-{"critical": 6, "high": 7, "medium": 35, "low": 27, "info": 17}
+{"critical": 8, "high": 7, "medium": 35, "low": 27, "info": 17}

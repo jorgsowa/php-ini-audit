@@ -22,6 +22,8 @@ critical high   EXT-001        xdebug.mode=debug,develop  at /etc/php/8.2/fpm/co
 critical medium FPM-001        listen=0.0.0.0:9000  at /etc/php/8.2/fpm/pool.d/www.conf:4  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
 critical low    CVE-2026-109618 memory_limit=${PHP_MEMORY_LIMIT}  at /etc/php/8.2/fpm/conf.d/99-override.ini:3  in /etc/php/8.2/fpm/php.ini
 critical low    CVE-2026-109619 session.upload_progress.enabled=1  at default  in /etc/php/8.2/fpm/php.ini
+critical low    VULN-003       -=-  at -  in /etc/php/8.2/cli/php.ini
+critical low    VULN-003       -=-  at -  in /etc/php/8.2/fpm/php.ini
 high     high   EXT-002        zend_extension=xdebug.so  at /etc/php/8.2/fpm/conf.d/20-xdebug.ini:1  in /etc/php/8.2/fpm/php.ini
 high     high   FPM-002        security.limit_extensions=.php .jpg  at /etc/php/8.2/fpm/pool.d/www.conf:8  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
 high     high   FPM-004        user=root  at /etc/php/8.2/fpm/pool.d/www.conf:2  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
@@ -108,4 +110,4 @@ info     low    ERR-010        disable_functions=exec,passthru,shell_exec,system
 info     low    FS-009         file_uploads=1  at /etc/php/8.2/fpm/php.ini:19  in /etc/php/8.2/fpm/php.ini
 info     low    OPC-003        opcache.validate_permission=0  at default  in /etc/php/8.2/fpm/php.ini
 [summary]
-{"critical": 6, "high": 7, "medium": 34, "low": 27, "info": 17}
+{"critical": 8, "high": 7, "medium": 34, "low": 27, "info": 17}

@@ -10,6 +10,7 @@ critical high   CVE-2026-109618 memory_limit=128M  at default  in /usr/local/etc
 critical high   CVE-2026-109619 session.upload_progress.enabled=1  at default  in /usr/local/etc/php (no php.ini)
 critical medium FPM-001        listen=9000  at /usr/local/etc/php-fpm.d/zz-docker.conf:5  in /usr/local/etc/php (no php.ini) + pool [www] (/usr/local/etc/php-fpm.d/zz-docker.conf)
 high     high   CVE-2026-91766 allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+high     high   VULN-003       -=-  at -  in /usr/local/etc/php (no php.ini)
 medium   high   CFG-006        -=-  at -  in /usr/local/etc/php (no php.ini)
 medium   high   CVE-2024-11234 allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
 medium   high   CVE-2024-8925  enable_post_data_reading=1  at default  in /usr/local/etc/php (no php.ini)
@@ -47,4 +48,4 @@ info     low    ERR-010        disable_functions=  at default  in /usr/local/etc
 info     low    FS-009         file_uploads=1  at default  in /usr/local/etc/php (no php.ini)
 info     low    OPC-003        opcache.validate_permission=0  at default  in /usr/local/etc/php (no php.ini)
 [summary]
-{"critical": 3, "high": 1, "medium": 15, "low": 14, "info": 7}
+{"critical": 3, "high": 2, "medium": 15, "low": 14, "info": 7}

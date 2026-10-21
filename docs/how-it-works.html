@@ -120,6 +120,7 @@
     <li><strong>Configuration</strong>: does the effective configuration use the vulnerable feature?</li>
   </ol>
   <p>A CVE is reported only when both are true. Fixed-in releases come from the official <a href="https://www.php.net/ChangeLog-8.php">PHP 8</a> and <a href="https://www.php.net/ChangeLog-7.php">PHP 7</a> changelogs. <a href="rules.html#VULN-001">VULN-001</a> also reports branches past, or within 180 days of, the end of security support.</p>
+  <p>Every other publicly disclosed CVE fixed in a later release (parsers, extensions, bundled libraries) is listed in one warning per configuration, <a href="rules.html#VULN-003">VULN-003</a>, with the severity of the worst one. Fixed-in releases come from the changelogs and <a href="https://github.com/php/php-src/security/advisories">php-src security advisories</a>, severities from those advisories or NVD.</p>
   <h3 id="version-detection">Where the version comes from</h3>
   <p>The exact version is read from files, never by running <code>php -v</code>:</p>
   <div class="table-scroll">
@@ -150,7 +151,7 @@
   <ul>
     <li>A static audit sees files only. It cannot see <code>php -d</code> flags, <code>PHP_INI_SCAN_DIR</code> or <code>PHP_VALUE</code> set by a web server, <code>ini_set()</code> at runtime, or which extensions are compiled in.</li>
     <li><code>php_admin_value</code> in Apache vhost files is not parsed (<code>.htaccess</code> is).</li>
-    <li>The CVE list covers vulnerabilities whose exploitability depends on configuration; it is not a complete PHP vulnerability database. Distribution backports can make a patched package look vulnerable, which is why those findings carry low confidence.</li>
+    <li>Only configuration-dependent CVEs are matched to settings; the rest are matched to the version alone and may not be reachable by your code. Distribution backports can make a patched package look vulnerable, which is why those findings carry low confidence.</li>
     <li>The built-in defaults table follows PHP 8. Paths compiled into a particular build (<code>extension_dir</code>, <code>include_path</code>) may differ.</li>
   </ul>
 </main>

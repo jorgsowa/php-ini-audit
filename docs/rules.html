@@ -25,7 +25,7 @@
 <main class="wrap">
   <h1>Rules</h1>
   <p class="lead">
-    <!-- generated:rule-count -->129<!-- /generated:rule-count --> rules. The severity shown is the rule's default; an individual finding can be raised or
+    <!-- generated:rule-count -->130<!-- /generated:rule-count --> rules. The severity shown is the rule's default; an individual finding can be raised or
     lowered by context, such as the SAPI, the profile or a related setting.
   </p>
 
@@ -1077,6 +1077,16 @@
     
     <p class="fix"><b>Fix:</b> Pass --php-version X.Y.Z (from `php -v` run by you), or scan with --root so package metadata can be read.</p>
     
+  </div>
+</details>
+<details class="rule" id="VULN-003" data-severity="high" data-category="VULN" data-search="vuln-003 publicly disclosed cves affect this php version php releases fix publicly disclosed vulnerabilities that do not depend on a particular setting (parsers, extensions, bundled libraries). the finding lists every cve fixed in a later release of this branch and takes the severity of the worst one; end-of-life branches are covered by vuln-001. cves whose exposure depends on the configuration are reported under their own ids instead.  ">
+  <summary><span class="id">VULN-003</span><span class="title">Publicly disclosed CVEs affect this PHP version</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP version support</span><span><b>Scope</b> config</span></div>
+    <p>PHP releases fix publicly disclosed vulnerabilities that do not depend on a particular setting (parsers, extensions, bundled libraries). The finding lists every CVE fixed in a later release of this branch and takes the severity of the worst one; end-of-life branches are covered by VULN-001. CVEs whose exposure depends on the configuration are reported under their own IDs instead.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade to the latest release of a supported PHP branch.</p>
+    <ul><li><a href="https://www.php.net/ChangeLog-8.php">https://www.php.net/ChangeLog-8.php</a></li><li><a href="https://github.com/php/php-src/security/advisories">https://github.com/php/php-src/security/advisories</a></li></ul>
   </div>
 </details>
 </section>

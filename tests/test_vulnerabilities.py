@@ -5,12 +5,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from php_ini_audit.cvedata import DISCLOSED
 from php_ini_audit.discovery import Discoverer
 from php_ini_audit.engine import Auditor, Options
 from php_ini_audit.fsutil import FileSystem
 from php_ini_audit.model import Confidence, Severity
 from php_ini_audit.rules.base import Context
-from php_ini_audit.rules.vulnerabilities import ADVISORIES, end_of_life
+from php_ini_audit.rules.vulnerabilities import ADVISORIES, disclosed_cves, end_of_life
 from php_ini_audit.versions import VersionEvidence, VersionFinder, pick
 
 from .helpers import FIXTURES, audit_ini, findings_for
@@ -53,6 +54,32 @@ class EndOfLifeTest(unittest.TestCase):
         self.assertEqual(warning.severity, Severity.LOW)
         self.assertEqual(self.hits((8, 4), datetime.date(2026, 10, 21)), [])
         self.assertEqual(self.hits((5, 4, 45), datetime.date(2026, 1, 1))[0].severity, Severity.CRITICAL)
+
+
+class DisclosedCveTest(unittest.TestCase):
+    def hits(self, version, **context):
+        ctx = Context(config=None, sapi="fpm", profile="production", php_version=version, **context)
+        return list(disclosed_cves(ctx))
+
+    def test_lists_cves_fixed_later_in_branch(self):
+        hit = self.hits((8, 3, 34))[0]
+        self.assertIn("CVE-2026-91767", hit.message)
+        self.assertIn("all fixed by 8.3.", hit.message)
+        self.assertNotIn("CVE-2026-91766", hit.message, "config-dependent CVEs have their own rule")
+        listed = set(hit.message.split(": ", 1)[1].split(", "))
+        self.assertEqual(hit.severity, max(severity for cve, severity, _ in DISCLOSED if cve in listed))
+        self.assertNotIn("CVE-2026-91767", " ".join(h.message for h in self.hits((8, 3, 35))))
+
+    def test_branch_without_listed_fix(self):
+        self.assertNotIn("CVE-2021-21708", " ".join(h.message for h in self.hits((8, 0, 30))))
+
+    def test_needs_patch_level(self):
+        self.assertEqual(self.hits((8, 3)), [])
+        self.assertEqual(self.hits((8, 5, 999)), [])
+
+    def test_backports_lower_confidence(self):
+        hit = self.hits((8, 2, 7), version_source="dpkg", version_backports=True)[0]
+        self.assertEqual(hit.confidence, Confidence.LOW)
 
 
 class ConfigurationGatingTest(unittest.TestCase):

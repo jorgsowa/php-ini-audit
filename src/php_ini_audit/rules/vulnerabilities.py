@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 from typing import Callable, Dict, Optional, Tuple
 
 from .. import directives
+from ..cvedata import DISCLOSED
 from ..config import OverlayKind
 from ..model import Confidence, Setting, Severity
 from ..versions import format_version, parse_version
@@ -55,11 +56,7 @@ class Advisory:
 
     @property
     def fixes(self) -> Dict[Branch, int]:
-        result = {}
-        for text in self.fixed:
-            major, minor, patch = parse_version(text)
-            result[(major, minor)] = patch
-        return result
+        return fixes_by_branch(self.fixed)
 
     def status(self, version: Tuple[int, ...]) -> str:
         """'affected', 'possible' (patch level unknown), 'fixed' or 'untracked' (older than every listed fix)."""
@@ -81,6 +78,14 @@ class Advisory:
         if patch is not None:
             return f"{branch[0]}.{branch[1]}.{patch}"
         return "a supported branch (" + ", ".join(self.fixed) + ")"
+
+
+def fixes_by_branch(fixed: Tuple[str, ...]) -> Dict[Branch, int]:
+    result = {}
+    for text in fixed:
+        major, minor, patch = parse_version(text)
+        result[(major, minor)] = patch
+    return result
 
 
 def _fpm(ctx) -> bool:
@@ -489,3 +494,46 @@ def version_unknown(ctx):
         known = f"PHP {format_version(version)}" if version else "PHP version unknown"
         yield Hit(f"{known}; this configuration is exposed to {len(pending)} CVE(s) unless patched: "
                   + ", ".join(pending), confidence=Confidence.MEDIUM)
+
+
+def _cve_key(cve: str) -> Tuple[int, int]:
+    _, year, number = cve.split("-")
+    return int(year), int(number)
+
+
+@rule(
+    "VULN-003",
+    "Publicly disclosed CVEs affect this PHP version",
+    severity=HIGH,
+    description="PHP releases fix publicly disclosed vulnerabilities that do not depend on a particular setting "
+    "(parsers, extensions, bundled libraries). The finding lists every CVE fixed in a later release of this "
+    "branch and takes the severity of the worst one; end-of-life branches are covered by VULN-001. CVEs whose "
+    "exposure depends on the configuration are reported under their own IDs instead.",
+    recommendation="Upgrade to the latest release of a supported PHP branch.",
+    references=("https://www.php.net/ChangeLog-8.php", "https://github.com/php/php-src/security/advisories"),
+)
+def disclosed_cves(ctx):
+    version = ctx.php_version
+    if not version or len(version) < 3:
+        return
+    branch = (version[0], version[1])
+    affected, latest_fix = [], 0
+    for cve, severity, fixed in DISCLOSED:
+        # Changelogs sometimes omit the CVE on a branch, so only a fix listed for this branch counts.
+        patch = fixes_by_branch(fixed).get(branch)
+        if cve in _BY_CVE or patch is None or version[2] >= patch:
+            continue
+        affected.append((severity, cve))
+        latest_fix = max(latest_fix, patch)
+    if not affected:
+        return
+    affected.sort(key=lambda item: (-item[0], _cve_key(item[1])))
+    counts = ", ".join(f"{sum(1 for s, _ in affected if s == level)} {level}"
+                       for level in (CRITICAL, HIGH, MEDIUM, LOW) if any(s == level for s, _ in affected))
+    message = (f"PHP {format_version(version)} is affected by {len(affected)} publicly disclosed CVE(s) ({counts}), "
+               f"all fixed by {branch[0]}.{branch[1]}.{latest_fix}: " + ", ".join(cve for _, cve in affected))
+    confidence = Confidence.HIGH
+    if ctx.version_backports:
+        message += f"; version from {ctx.version_source}, which may carry backported fixes"
+        confidence = Confidence.LOW
+    yield Hit(message, severity=affected[0][0], confidence=confidence)
