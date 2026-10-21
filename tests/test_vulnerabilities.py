@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from php_ini_audit.discovery import Discoverer
+from php_ini_audit.engine import Auditor, Options
 from php_ini_audit.fsutil import FileSystem
 from php_ini_audit.model import Confidence, Severity
 from php_ini_audit.rules.base import Context
@@ -74,6 +76,37 @@ class ConfigurationGatingTest(unittest.TestCase):
         self.assertFalse(findings_for(result, "CVE-2025-1861"))
         summary = findings_for(result, "VULN-002")[0]
         self.assertIn("CVE-2025-1861 (fixed in 8.3.19)", summary.message)
+
+    def test_oom_path_reported_even_when_mitigated(self):
+        finite = findings_for(audit_ini("post_max_size = 512M\n", php_version=(8, 4, 26)), "CVE-2026-109618")[0]
+        self.assertEqual(finite.confidence, Confidence.HIGH)
+        self.assertIn("post_max_size = 512M", finite.message)
+        unlimited = audit_ini("memory_limit = -1\n", php_version=(8, 4, 26))
+        self.assertEqual(findings_for(unlimited, "CVE-2026-109618")[0].confidence, Confidence.MEDIUM)
+        self.assertEqual(findings_for(unlimited, "RES-001")[0].severity, Severity.INFO)
+        self.assertFalse(findings_for(audit_ini("", php_version=(8, 4, 27)), "CVE-2026-109618"))
+        self.assertFalse(findings_for(audit_ini("", php_version=(8, 4, 26), sapi="cli"), "CVE-2026-109618"))
+
+    def test_stale_state_paths(self):
+        default = findings_for(audit_ini("", php_version=(8, 5, 11)), "CVE-2026-109619")[0]
+        self.assertIn("session.upload_progress.enabled is On", default.message)
+        self.assertIn("fatal_error_backtraces is On", default.message)
+        older = findings_for(audit_ini("", php_version=(8, 4, 26)), "CVE-2026-109619")[0]
+        self.assertNotIn("fatal_error_backtraces", older.message)
+        closed = audit_ini("session.upload_progress.enabled = 0\nfatal_error_backtraces = 0\n",
+                           php_version=(8, 5, 11))
+        self.assertEqual(findings_for(closed, "CVE-2026-109619")[0].confidence, Confidence.MEDIUM)
+
+    def test_user_ini_cannot_disable_upload_progress(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            Path(tmp, "php.ini").write_text("session.upload_progress.enabled = On\n")
+            Path(tmp, ".user.ini").write_text("session.upload_progress.enabled = 0\nsession.sid_length = 48\n")
+            fs = FileSystem()
+            discovery = Discoverer(fs).paths([str(Path(tmp, "php.ini")), str(Path(tmp, ".user.ini"))])
+            result = Auditor(fs, Options(sapi="fpm", php_version=(8, 4, 26), path_checks=False)).run(discovery)
+        late = [f for f in findings_for(result, "CVE-2026-109619") if ".user.ini" in f.target]
+        self.assertIn("applies after request parsing", late[0].message)
+        self.assertEqual(findings_for(result, "CFG-010")[0].severity, Severity.MEDIUM)
 
     def test_cookie_prefix(self):
         result = audit_ini("session.name = __Host-SID\n", php_version=(8, 2, 17))

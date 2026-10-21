@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from .base import LOW, MEDIUM, WEB_SAPIS, Hit, rule
+from .base import INFO, LOW, MEDIUM, WEB_SAPIS, Hit, rule
+from .vulnerabilities import exposed_to
 
 GIB = 1024**3
 
@@ -21,7 +22,11 @@ def memory_limit(ctx):
     setting = ctx.get("memory_limit")
     size = setting.as_bytes()
     if size is not None and size < 0:
-        yield Hit("memory_limit is unlimited (-1)", (setting,))
+        if exposed_to("CVE-2026-109618", ctx.php_version):
+            yield Hit("memory_limit is unlimited (-1), the interim mitigation for CVE-2026-109618; restore a limit "
+                      "after upgrading", (setting,), severity=INFO)
+        else:
+            yield Hit("memory_limit is unlimited (-1)", (setting,))
     elif size is not None and size > GIB:
         yield Hit(f"{setting.describe()} (> 1G)", (setting,), severity=LOW)
 

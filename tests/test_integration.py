@@ -3,6 +3,8 @@ import io
 import json
 import os
 import stat
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +13,8 @@ from php_ini_audit.cli import main
 from php_ini_audit.fsutil import FileSystem, ReadError
 
 from .helpers import FIXTURES
+
+SRC = Path(__file__).resolve().parent.parent / "src"
 
 
 def run_cli(*argv):
@@ -97,6 +101,41 @@ class CliTest(unittest.TestCase):
     def test_discover(self):
         code, out, _ = run_cli("discover", "--root", str(FIXTURES / "debian"))
         self.assertIn("/etc/php/8.2/fpm/pool.d/www.conf", out)
+
+
+class ProcessTest(unittest.TestCase):
+    """The installed entry point, run as a separate process."""
+
+    def run_module(self, *argv):
+        env = dict(os.environ, PYTHONPATH=str(SRC), NO_COLOR="1")
+        return subprocess.run([sys.executable, "-m", "php_ini_audit", *argv], capture_output=True, text=True,
+                              env=env, timeout=60)
+
+    def test_exit_codes(self):
+        debian = str(FIXTURES / "debian")
+        self.assertEqual(self.run_module("--root", debian).returncode, 0)
+        self.assertEqual(self.run_module("--root", debian, "--fail-on", "high").returncode, 1)
+        self.assertEqual(self.run_module("--root", debian, "--fail-on", "bogus").returncode, 2)
+        self.assertEqual(self.run_module("--root", str(FIXTURES / "missing")).returncode, 2)
+
+    def test_output_file_keeps_stdout_clean(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report = Path(tmp, "report.sarif")
+            done = self.run_module("--root", str(FIXTURES / "debian"), "--format", "sarif", "-o", str(report))
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(done.stdout, "")
+            self.assertTrue(json.loads(report.read_text())["runs"][0]["results"])
+
+    def test_missing_path_is_a_warning(self):
+        done = self.run_module(str(FIXTURES / "hardened" / "php.ini"), str(FIXTURES / "nope.ini"), "--format", "json")
+        self.assertEqual(done.returncode, 0)
+        warnings = json.loads(done.stdout)["warnings"]
+        self.assertTrue(any("nope.ini" in w for w in warnings), warnings)
+
+    def test_text_report_is_plain_when_piped(self):
+        done = self.run_module("--root", str(FIXTURES / "debian"))
+        self.assertNotIn("\033[", done.stdout)
+        self.assertIn("Summary", done.stdout)
 
 
 @unittest.skipIf(os.name == "nt", "POSIX permissions and symlinks")

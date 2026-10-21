@@ -1,0 +1,9 @@
+[targets]
+<fixtures>/hardened/php.ini  sapi=unknown php=unknown
+  file <fixtures>/hardened/php.ini
+[warnings]
+[findings]
+info     high   CFG-010        allow_url_include=  at <fixtures>/hardened/php.ini:14  in <fixtures>/hardened/php.ini
+info     medium VULN-002       -=-  at -  in <fixtures>/hardened/php.ini
+[summary]
+{"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 2}

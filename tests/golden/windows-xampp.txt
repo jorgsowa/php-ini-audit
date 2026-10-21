@@ -1,0 +1,34 @@
+[targets]
+<fixtures>/windows-xampp/php.ini  sapi=unknown php=unknown
+  file <fixtures>/windows-xampp/php.ini
+[warnings]
+[findings]
+medium   high   EXEC-011       register_argc_argv=1  at default  in <fixtures>/windows-xampp/php.ini
+medium   high   SESS-001       session.use_strict_mode=0  at default  in <fixtures>/windows-xampp/php.ini
+medium   high   SESS-005       session.cookie_httponly=0  at default  in <fixtures>/windows-xampp/php.ini
+medium   medium CGI-002        cgi.fix_pathinfo=1  at default  in <fixtures>/windows-xampp/php.ini
+medium   medium EXEC-002       allow_url_fopen=1  at default  in <fixtures>/windows-xampp/php.ini
+medium   medium EXEC-005       disable_functions=exec,system,shell_exec,passthru,popen  at <fixtures>/windows-xampp/php.ini:6  in <fixtures>/windows-xampp/php.ini
+medium   medium FS-001         open_basedir=-  at default  in <fixtures>/windows-xampp/php.ini
+medium   medium SESS-006       session.cookie_secure=0  at default  in <fixtures>/windows-xampp/php.ini
+medium   medium SESS-009       session.save_path=  at default  in <fixtures>/windows-xampp/php.ini
+low      high   ERR-002        display_startup_errors=1  at default  in <fixtures>/windows-xampp/php.ini
+low      high   ERR-003        log_errors=0  at default  in <fixtures>/windows-xampp/php.ini
+low      high   ERR-004        expose_php=1  at default  in <fixtures>/windows-xampp/php.ini
+low      high   ERR-005        zend.exception_ignore_args=0  at default  in <fixtures>/windows-xampp/php.ini
+low      high   EXEC-014       zend.assertions=1  at default  in <fixtures>/windows-xampp/php.ini
+low      high   SESS-007       session.cookie_samesite=  at default  in <fixtures>/windows-xampp/php.ini
+low      medium ERR-008        variables_order=EGPCS  at default  in <fixtures>/windows-xampp/php.ini
+low      medium EXEC-008       enable_dl=1  at default  in <fixtures>/windows-xampp/php.ini
+low      medium EXEC-017       session.upload_progress.enabled=1  at default  in <fixtures>/windows-xampp/php.ini
+low      low    OPC-002        opcache.restrict_api=  at default  in <fixtures>/windows-xampp/php.ini
+info     high   EXEC-016       include_path=.:/usr/share/php  at default  in <fixtures>/windows-xampp/php.ini
+info     high   FS-008         user_ini.filename=.user.ini  at default  in <fixtures>/windows-xampp/php.ini
+info     high   FS-010         upload_tmp_dir=-  at default  in <fixtures>/windows-xampp/php.ini
+info     high   SESS-012       session.name=PHPSESSID  at default  in <fixtures>/windows-xampp/php.ini
+info     medium VULN-002       -=-  at -  in <fixtures>/windows-xampp/php.ini
+info     low    ERR-010        disable_functions=exec,system,shell_exec,passthru,popen  at <fixtures>/windows-xampp/php.ini:6  in <fixtures>/windows-xampp/php.ini
+info     low    FS-009         file_uploads=1  at default  in <fixtures>/windows-xampp/php.ini
+info     low    OPC-003        opcache.validate_permission=0  at default  in <fixtures>/windows-xampp/php.ini
+[summary]
+{"critical": 0, "high": 0, "medium": 9, "low": 10, "info": 8}

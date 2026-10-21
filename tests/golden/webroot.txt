@@ -1,0 +1,16 @@
+[targets]
+PHP built-in defaults + .user.ini: <fixtures>/webroot/.user.ini  sapi=unknown php=unknown
+  file <fixtures>/webroot/.user.ini
+PHP built-in defaults + .htaccess: <fixtures>/webroot/uploads/.htaccess  sapi=unknown php=unknown
+  file <fixtures>/webroot/uploads/.htaccess
+[warnings]
+[findings]
+high     high   HTA-001        -=-  at <fixtures>/webroot/uploads/.htaccess:1  in PHP built-in defaults + .htaccess: <fixtures>/webroot/uploads/.htaccess
+high     medium HTA-001        -=-  at <fixtures>/webroot/uploads/.htaccess:5  in PHP built-in defaults + .htaccess: <fixtures>/webroot/uploads/.htaccess
+medium   medium SESS-006       session.cookie_secure=  at <fixtures>/webroot/.user.ini:4  in PHP built-in defaults + .user.ini: <fixtures>/webroot/.user.ini
+medium   low    EXEC-004       auto_prepend_file=/var/www/html/uploads/.cache.php  at <fixtures>/webroot/.user.ini:1  in PHP built-in defaults + .user.ini: <fixtures>/webroot/.user.ini
+low      high   CFG-001        -=-  at <fixtures>/webroot/uploads/.htaccess:3  in PHP built-in defaults + .htaccess: <fixtures>/webroot/uploads/.htaccess
+low      high   CFG-005        disable_functions=  at <fixtures>/webroot/.user.ini:2  in PHP built-in defaults + .user.ini: <fixtures>/webroot/.user.ini
+low      high   CFG-005        allow_url_fopen=  at <fixtures>/webroot/.user.ini:3  in PHP built-in defaults + .user.ini: <fixtures>/webroot/.user.ini
+[summary]
+{"critical": 0, "high": 2, "medium": 2, "low": 3, "info": 0}

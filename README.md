@@ -119,6 +119,8 @@ its source, a CWE where applicable and a recommendation.
 | CVE-2025-1734 | low | Known vulnerabilities | HTTP wrapper accepts headers without a colon |
 | CVE-2025-1736 | medium | Known vulnerabilities | HTTP wrapper header check may omit headers |
 | CVE-2025-1861 | medium | Known vulnerabilities | HTTP wrapper truncates redirect locations |
+| CVE-2026-109618 | critical | Known vulnerabilities | Remote code execution after an out-of-memory error |
+| CVE-2026-109619 | critical | Known vulnerabilities | Remote code execution through stale request state |
 | CVE-2026-6735 | medium | Known vulnerabilities | XSS in the PHP-FPM status page |
 | CVE-2026-91766 | high | Known vulnerabilities | HTTP wrapper leaks credentials across origins on redirect |
 | CVE-2026-91768 | high | Known vulnerabilities | IPv6 bypass of listen.allowed_clients |
@@ -226,6 +228,16 @@ Regenerate this table with `php-ini-audit rules --format markdown`.
 ```sh
 PYTHONPATH=src python3 -m unittest discover -s tests -t .
 ```
+
+Integration tests compare the scanner with real PHP:
+
+- `tests/test_php_parity.py` runs `php-cgi` (from `PATH`, or `PHP_CGI=/path/a:/path/b` for several versions) and
+  checks built-in defaults, changeability, parsing, scan-dir layering, `[PATH=]` sections and `.user.ini`.
+  Skipped when no `php-cgi` is found.
+- `tests/test_docker_images.py` scans exported official, Alpine and Debian images and compares with
+  `php-fpm -i` inside them. Opt-in: `PHP_INI_AUDIT_DOCKER=1`.
+- `tests/test_golden.py` snapshots full reports over `tests/fixtures/`. After an intended change, regenerate with
+  `UPDATE_GOLDEN=1` and review the diff of `tests/golden/`.
 
 The documentation site is plain HTML in `docs/`, deployed to GitHub Pages by `.github/workflows/pages.yml`
 (set Pages → Source to "GitHub Actions"). The rule reference and counts are generated from the rule registry:

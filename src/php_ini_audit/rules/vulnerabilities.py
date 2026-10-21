@@ -10,7 +10,9 @@ import datetime
 from dataclasses import dataclass, replace
 from typing import Callable, Dict, Optional, Tuple
 
-from ..model import Confidence, Severity
+from .. import directives
+from ..config import OverlayKind
+from ..model import Confidence, Setting, Severity
 from ..versions import format_version, parse_version
 from .base import CRITICAL, HIGH, INFO, LOW, MEDIUM, WEB_SAPIS, Hit, rule
 from .execution import disabled_functions
@@ -178,6 +180,59 @@ def upload_progress(ctx) -> Match:
     return None
 
 
+MIB = 1024**2
+SMALL_POST_LIMIT = 32 * MIB
+
+
+def oom_path(ctx) -> Match:
+    memory = ctx.get("memory_limit")
+    size = memory.as_bytes()
+    if size is not None and size < 0:
+        reason = "memory_limit = -1 removes PHP's own limit, but allocation failures still reach the vulnerable path"
+        confidence = Confidence.MEDIUM
+    else:
+        reason = f"{memory.describe()} lets a request run into the out-of-memory path"
+        confidence = Confidence.HIGH
+    evidence = (memory,)
+    post = ctx.get("post_max_size")
+    post_size = post.as_bytes()
+    if post_size is not None and (post_size <= 0 or post_size > SMALL_POST_LIMIT):
+        reason += f"; {post.describe()} accepts large request bodies"
+        evidence += (post,)
+    return reason, evidence, confidence
+
+
+def _before_request_parsing(ctx, name: str) -> Tuple[Setting, Optional[Setting]]:
+    """The value in force while the request body is parsed, and the .user.ini override that comes too late."""
+    setting = ctx.get(name)
+    if ctx.overlay_kind is not OverlayKind.USER_INI or not ctx.config.is_overlay(setting.directive):
+        return setting, None
+    if setting.overridden:
+        previous = setting.overridden[-1]
+        return Setting(name, previous.value, previous, setting.overridden[:-1]), setting
+    return Setting(name, directives.default(name)), setting
+
+
+def stale_state(ctx) -> Match:
+    progress, late = _before_request_parsing(ctx, "session.upload_progress.enabled")
+    paths, evidence = [], []
+    if progress.as_bool():
+        if late is not None:
+            paths.append(f"session upload progress stays On because {late.describe()} in .user.ini applies after "
+                         "request parsing")
+            evidence.append(late)
+        else:
+            paths.append("session.upload_progress.enabled is On")
+            evidence.append(progress)
+    backtraces = ctx.get("fatal_error_backtraces")
+    if ctx.php_version is not None and ctx.php_version >= (8, 5) and backtraces.as_bool():
+        paths.append("fatal_error_backtraces is On")
+        evidence.append(backtraces)
+    if paths:
+        return "; ".join(paths), tuple(evidence)
+    return "the confirmed paths are closed, but other variants remain", (late or progress,), Confidence.MEDIUM
+
+
 def prefixed_session_cookie(ctx) -> Match:
     setting = ctx.get("session.name")
     if setting.text.startswith(("__Host-", "__Secure-")):
@@ -188,7 +243,25 @@ def prefixed_session_cookie(ctx) -> Match:
 _HTTP_WRAPPER = "PHP's http:// stream wrapper"
 _FPM_SAPIS = frozenset({"fpm", "unknown"})
 
+_PHP2SHELL_FIXED = ("8.2.35", "8.3.36", "8.4.27", "8.5.12")
+
 ADVISORIES: Tuple[Advisory, ...] = (
+    Advisory("CVE-2026-109618", "Remote code execution after an out-of-memory error", CRITICAL, _PHP2SHELL_FIXED,
+             oom_path,
+             "When an allocation fails, PHP aborts the request and leaves request memory in an invalid state that "
+             "shutdown code still uses, so a crafted request can corrupt memory and run code (exploited in the "
+             "wild). Configuration only reduces exposure.",
+             "Upgrade. Until then set memory_limit = -1 with php_admin_value so applications cannot lower it, keep "
+             "post_max_size at 8M (32M with uploads), and bound memory with a container or cgroup limit rather "
+             "than RLIMIT_AS/RLIMIT_DATA.", "CWE-416", sapis=WEB_SAPIS),
+    Advisory("CVE-2026-109619", "Remote code execution through stale request state", CRITICAL, _PHP2SHELL_FIXED,
+             stale_state,
+             "Request-owned state survives a fatal error into the next request on the same worker and is used "
+             "before initialisation. Confirmed paths are session upload progress and, on PHP 8.5, fatal error "
+             "backtraces; other variants remain.",
+             "Upgrade. Until then set session.upload_progress.enabled = 0 in php.ini or the FPM pool (not "
+             ".user.ini or ini_set()), on PHP 8.5 set fatal_error_backtraces = 0, restart every worker, and remove "
+             "deprecated settings from .user.ini/.htaccess.", "CWE-416", sapis=WEB_SAPIS),
     Advisory("CVE-2024-4577", "php-cgi argument injection on Windows", CRITICAL, ("8.1.29", "8.2.20", "8.3.8"),
              windows_cgi,
              "Windows 'Best-Fit' character conversion lets a soft hyphen in the query string become a php-cgi "
@@ -343,6 +416,13 @@ def _register(advisory: Advisory) -> None:
 
 for _advisory in ADVISORIES:
     _register(_advisory)
+
+_BY_CVE = {a.cve: a for a in ADVISORIES}
+
+
+def exposed_to(cve: str, version: Optional[Tuple[int, ...]]) -> bool:
+    """Whether the version is, or may be, older than the fix; False when the version is unknown."""
+    return bool(version) and _BY_CVE[cve].status(version) in ("affected", "possible")
 
 
 @rule(

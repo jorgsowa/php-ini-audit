@@ -1,0 +1,105 @@
+[targets]
+/etc/php/8.2/cli/php.ini  sapi=cli php=8.2.7 from /var/lib/dpkg/status (php8.2-common 8.2.7-1~deb12u1)
+  file /etc/php/8.2/cli/php.ini
+/etc/php/8.2/fpm/php.ini  sapi=fpm php=8.2.7 from /var/lib/dpkg/status (php8.2-common 8.2.7-1~deb12u1)
+  file /etc/php/8.2/fpm/php.ini
+  file /etc/php/8.2/fpm/conf.d/20-xdebug.ini
+  file /etc/php/8.2/fpm/conf.d/99-override.ini
+/etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]  sapi=fpm php=8.2.7 from /var/lib/dpkg/status (php8.2-common 8.2.7-1~deb12u1)
+  file /etc/php/8.2/fpm/php.ini
+  file /etc/php/8.2/fpm/conf.d/20-xdebug.ini
+  file /etc/php/8.2/fpm/conf.d/99-override.ini
+/etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)  sapi=fpm php=8.2.7 from /var/lib/dpkg/status (php8.2-common 8.2.7-1~deb12u1)
+  file /etc/php/8.2/fpm/php.ini
+  file /etc/php/8.2/fpm/conf.d/20-xdebug.ini
+  file /etc/php/8.2/fpm/conf.d/99-override.ini
+  file /etc/php/8.2/fpm/pool.d/www.conf
+[warnings]
+[findings]
+critical high   EXEC-001       allow_url_include=1  at /etc/php/8.2/fpm/php.ini:22  in /etc/php/8.2/fpm/php.ini
+critical high   EXEC-003       auto_prepend_file=php://input  at /etc/php/8.2/fpm/php.ini:25  in /etc/php/8.2/fpm/php.ini
+critical medium FPM-001        listen=0.0.0.0:9000  at /etc/php/8.2/fpm/pool.d/www.conf:4  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+critical low    CVE-2026-109618 memory_limit=${PHP_MEMORY_LIMIT}  at /etc/php/8.2/fpm/conf.d/99-override.ini:3  in /etc/php/8.2/fpm/php.ini
+critical low    CVE-2026-109619 session.upload_progress.enabled=1  at default  in /etc/php/8.2/fpm/php.ini
+high     high   EXT-001        xdebug.mode=debug,develop  at /etc/php/8.2/fpm/conf.d/20-xdebug.ini:2  in /etc/php/8.2/fpm/php.ini
+high     high   FPM-002        security.limit_extensions=.php .jpg  at /etc/php/8.2/fpm/pool.d/www.conf:8  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+high     high   FPM-004        user=root  at /etc/php/8.2/fpm/pool.d/www.conf:2  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+high     high   SESS-002       session.use_only_cookies=0  at /etc/php/8.2/fpm/php.ini:35  in /etc/php/8.2/fpm/php.ini
+high     low    CVE-2026-91766 allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+high     low    CVE-2026-91766 allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+high     low    CVE-2026-91766 allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+medium   high   DB-001         mysqli.allow_local_infile=1  at /etc/php/8.2/fpm/php.ini:44  in /etc/php/8.2/fpm/php.ini
+medium   high   DB-002         mysqli.default_pw=s3cret  at /etc/php/8.2/fpm/php.ini:45  in /etc/php/8.2/fpm/php.ini
+medium   high   ENC-001        default_charset=GBK  at /etc/php/8.2/fpm/php.ini:16  in /etc/php/8.2/fpm/php.ini
+medium   high   EXEC-017       session.upload_progress.enabled=1  at default  in /etc/php/8.2/fpm/php.ini
+medium   high   FPM-003        listen.mode=0666  at /etc/php/8.2/fpm/pool.d/www.conf:5  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+medium   high   FS-002         open_basedir=/  at /etc/php/8.2/fpm/pool.d/www.conf:14  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+medium   high   RES-002        max_execution_time=0  at /etc/php/8.2/fpm/php.ini:5  in /etc/php/8.2/fpm/php.ini
+medium   high   SESS-001       session.use_strict_mode=0  at /etc/php/8.2/fpm/php.ini:33  in /etc/php/8.2/fpm/php.ini
+medium   high   SESS-005       session.cookie_httponly=  at /etc/php/8.2/fpm/php.ini:37  in /etc/php/8.2/fpm/php.ini
+medium   high   SESS-010       session.save_path=N;0777;/tmp  at /etc/php/8.2/fpm/php.ini:32  in /etc/php/8.2/fpm/php.ini
+medium   medium CFG-003        display_error=  at /etc/php/8.2/fpm/php.ini:26  in /etc/php/8.2/fpm/php.ini
+medium   medium CGI-002        cgi.fix_pathinfo=1  at default  in /etc/php/8.2/fpm/php.ini
+medium   medium EXEC-002       allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+medium   medium EXEC-002       allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+medium   medium EXEC-006       disable_functions=exec,passthru,shell_exec,system,proc_open,popen,pcntl_exec  at /etc/php/8.2/fpm/php.ini:23  in /etc/php/8.2/fpm/php.ini
+medium   medium FPM-007        DB_PASSWORD=hunter2  at /etc/php/8.2/fpm/pool.d/www.conf:10  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+medium   medium SESS-006       session.cookie_secure=0  at default  in /etc/php/8.2/fpm/php.ini
+medium   medium SESS-009       session.save_path=N;0777;/tmp  at /etc/php/8.2/fpm/php.ini:32  in /etc/php/8.2/fpm/php.ini
+medium   low    CVE-2024-11234 allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+medium   low    CVE-2024-11234 allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+medium   low    CVE-2024-11234 allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+medium   low    CVE-2024-8925  enable_post_data_reading=1  at default  in /etc/php/8.2/fpm/php.ini
+medium   low    CVE-2025-1736  allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+medium   low    CVE-2025-1736  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+medium   low    CVE-2025-1736  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+medium   low    CVE-2025-1861  allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+medium   low    CVE-2025-1861  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+medium   low    CVE-2025-1861  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+medium   low    CVE-2026-6735  pm.status_path=/status  at /etc/php/8.2/fpm/pool.d/www.conf:7  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+medium   low    CVE-2026-93682 allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+medium   low    CVE-2026-93682 allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+medium   low    CVE-2026-93682 allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+low      high   CFG-001        -=-  at /etc/php/8.2/fpm/php.ini:27  in /etc/php/8.2/fpm/php.ini
+low      high   CFG-002        safe_mode=1  at /etc/php/8.2/fpm/php.ini:28  in /etc/php/8.2/fpm/php.ini
+low      high   CFG-007        memory_limit=${PHP_MEMORY_LIMIT}  at /etc/php/8.2/fpm/conf.d/99-override.ini:3  in /etc/php/8.2/fpm/php.ini
+low      high   ERR-003        log_errors=0  at default  in /etc/php/8.2/cli/php.ini
+low      high   ERR-004        expose_php=1  at /etc/php/8.2/fpm/php.ini:4  in /etc/php/8.2/fpm/php.ini
+low      high   EXEC-008       enable_dl=1  at default  in /etc/php/8.2/cli/php.ini
+low      high   FPM-006        clear_env=  at /etc/php/8.2/fpm/pool.d/www.conf:9  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+low      high   FS-003         open_basedir=/var/www:/tmp/  at /etc/php/8.2/fpm/php.ini:24  in /etc/php/8.2/fpm/php.ini
+low      high   SESS-007       session.cookie_samesite=  at /etc/php/8.2/fpm/php.ini:38  in /etc/php/8.2/fpm/php.ini
+low      high   VULN-001       -=-  at -  in /etc/php/8.2/cli/php.ini
+low      high   VULN-001       -=-  at -  in /etc/php/8.2/fpm/php.ini
+low      medium EXEC-002       allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+low      medium FPM-005        pm.status_path=/status  at /etc/php/8.2/fpm/pool.d/www.conf:7  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+low      low    CVE-2025-1217  allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+low      low    CVE-2025-1217  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+low      low    CVE-2025-1217  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+low      low    CVE-2025-1219  allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+low      low    CVE-2025-1219  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+low      low    CVE-2025-1219  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+low      low    CVE-2025-1734  allow_url_fopen=1  at /etc/php/8.2/cli/php.ini:5  in /etc/php/8.2/cli/php.ini
+low      low    CVE-2025-1734  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:21  in /etc/php/8.2/fpm/php.ini
+low      low    CVE-2025-1734  allow_url_fopen=1  at /etc/php/8.2/fpm/php.ini:48  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+low      low    OPC-002        opcache.restrict_api=  at default  in /etc/php/8.2/fpm/php.ini
+info     high   CFG-004        display_errors=  at /etc/php/8.2/fpm/conf.d/99-override.ini:2  in /etc/php/8.2/fpm/php.ini
+info     high   CFG-004        display_errors=1  at /etc/php/8.2/fpm/php.ini:49  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+info     high   CFG-004        disable_functions=exec,passthru,shell_exec,system,proc_open,popen,pcntl_exec,putenv  at /etc/php/8.2/fpm/pool.d/www.conf:12  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+info     high   CFG-004        display_errors=1  at /etc/php/8.2/fpm/pool.d/www.conf:13  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+info     high   CFG-004        open_basedir=/  at /etc/php/8.2/fpm/pool.d/www.conf:14  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+info     high   CFG-009        -=-  at /etc/php/8.2/fpm/php.ini:47  in /etc/php/8.2/fpm/php.ini
+info     high   CFG-010        allow_url_include=1  at /etc/php/8.2/fpm/php.ini:22  in /etc/php/8.2/fpm/php.ini
+info     high   ERR-001        display_errors=1  at /etc/php/8.2/fpm/php.ini:49  in /etc/php/8.2/fpm/php.ini + php.ini [PATH=]/[HOST=] section: [PATH=/var/www/legacy]
+info     high   ERR-001        display_errors=1  at /etc/php/8.2/fpm/pool.d/www.conf:13  in /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+info     high   EXEC-016       include_path=.:/usr/share/php  at default  in /etc/php/8.2/cli/php.ini
+info     high   EXEC-016       include_path=.:/usr/share/php  at /etc/php/8.2/fpm/php.ini:17  in /etc/php/8.2/fpm/php.ini
+info     high   EXT-002        zend_extension=xdebug.so  at /etc/php/8.2/fpm/conf.d/20-xdebug.ini:1  in /etc/php/8.2/fpm/php.ini
+info     high   FS-008         user_ini.filename=.user.ini  at default  in /etc/php/8.2/fpm/php.ini
+info     high   FS-010         upload_tmp_dir=-  at default  in /etc/php/8.2/fpm/php.ini
+info     high   SESS-012       session.name=PHPSESSID  at /etc/php/8.2/fpm/php.ini:36  in /etc/php/8.2/fpm/php.ini
+info     low    CFG-004        memory_limit=${PHP_MEMORY_LIMIT}  at /etc/php/8.2/fpm/conf.d/99-override.ini:3  in /etc/php/8.2/fpm/php.ini
+info     low    FS-009         file_uploads=1  at /etc/php/8.2/fpm/php.ini:19  in /etc/php/8.2/fpm/php.ini
+info     low    OPC-003        opcache.validate_permission=0  at default  in /etc/php/8.2/fpm/php.ini
+[summary]
+{"critical": 5, "high": 7, "medium": 32, "low": 23, "info": 18}

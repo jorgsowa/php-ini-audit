@@ -24,7 +24,7 @@
 <main class="wrap">
   <h1>Rules</h1>
   <p class="lead">
-    <!-- generated:rule-count -->127<!-- /generated:rule-count --> rules. The severity shown is the rule's default; an individual finding can be raised or
+    <!-- generated:rule-count -->129<!-- /generated:rule-count --> rules. The severity shown is the rule's default; an individual finding can be raised or
     lowered by context, such as the SAPI, the profile or a related setting.
   </p>
 
@@ -955,7 +955,7 @@
     <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> file</span></div>
     <p>Deprecated directives set to a non-default value still work but emit warnings and will disappear in a future release.</p>
     
-    <p class="fix"><b>Fix:</b> Plan to remove the directive.</p>
+    <p class="fix"><b>Fix:</b> Plan to remove the directive; remove it now from .user.ini/.htaccess on PHP versions affected by CVE-2026-109619.</p>
     
   </div>
 </details>
@@ -1309,6 +1309,26 @@
     
     <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
     <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1861">https://nvd.nist.gov/vuln/detail/CVE-2025-1861</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2026-109618" data-severity="critical" data-category="CVE" data-search="cve-2026-109618 remote code execution after an out-of-memory error when an allocation fails, php aborts the request and leaves request memory in an invalid state that shutdown code still uses, so a crafted request can corrupt memory and run code (exploited in the wild). configuration only reduces exposure. fixed in php 8.2.35, 8.3.36, 8.4.27, 8.5.12.  cwe-416">
+  <summary><span class="id">CVE-2026-109618</span><span class="title">Remote code execution after an out-of-memory error</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/416.html">CWE-416</a></span></div>
+    <p>When an allocation fails, PHP aborts the request and leaves request memory in an invalid state that shutdown code still uses, so a crafted request can corrupt memory and run code (exploited in the wild). Configuration only reduces exposure. Fixed in PHP 8.2.35, 8.3.36, 8.4.27, 8.5.12.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade. Until then set memory_limit = -1 with php_admin_value so applications cannot lower it, keep post_max_size at 8M (32M with uploads), and bound memory with a container or cgroup limit rather than RLIMIT_AS/RLIMIT_DATA.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-109618">https://nvd.nist.gov/vuln/detail/CVE-2026-109618</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2026-109619" data-severity="critical" data-category="CVE" data-search="cve-2026-109619 remote code execution through stale request state request-owned state survives a fatal error into the next request on the same worker and is used before initialisation. confirmed paths are session upload progress and, on php 8.5, fatal error backtraces; other variants remain. fixed in php 8.2.35, 8.3.36, 8.4.27, 8.5.12.  cwe-416">
+  <summary><span class="id">CVE-2026-109619</span><span class="title">Remote code execution through stale request state</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/416.html">CWE-416</a></span></div>
+    <p>Request-owned state survives a fatal error into the next request on the same worker and is used before initialisation. Confirmed paths are session upload progress and, on PHP 8.5, fatal error backtraces; other variants remain. Fixed in PHP 8.2.35, 8.3.36, 8.4.27, 8.5.12.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade. Until then set session.upload_progress.enabled = 0 in php.ini or the FPM pool (not .user.ini or ini_set()), on PHP 8.5 set fatal_error_backtraces = 0, restart every worker, and remove deprecated settings from .user.ini/.htaccess.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-109619">https://nvd.nist.gov/vuln/detail/CVE-2026-109619</a></li></ul>
   </div>
 </details>
 <details class="rule" id="CVE-2026-6735" data-severity="medium" data-category="CVE" data-search="cve-2026-6735 xss in the php-fpm status page the fpm status endpoint reflects request data without escaping in its html output. fixed in php 8.2.31, 8.3.31, 8.4.21, 8.5.6.  cwe-79">

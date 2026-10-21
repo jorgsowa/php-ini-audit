@@ -141,7 +141,7 @@ class Discoverer:
         if scan_dirs is None:
             scan_dirs = list(SCAN_DIR_OVERRIDES.get(ini or "", ()))
             scan_dirs += [self._join(directory, name) for name in SCAN_DIR_NAMES]
-            scan_dirs = [d for d in scan_dirs if self.fs.is_dir(d)]
+            scan_dirs = [d for d in dict.fromkeys(scan_dirs) if self.fs.is_dir(d)]
         scan_files: List[str] = []
         for scan_dir in scan_dirs:
             scan_files.extend(f for f in self.scan_files_in(scan_dir) if f != ini)

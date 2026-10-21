@@ -1,0 +1,50 @@
+[targets]
+/usr/local/etc/php (no php.ini)  sapi=unknown php=8.3.6 from /usr/local/include/php/main/php_version.h defaults-only
+  file /usr/local/etc/php/conf.d/docker-php-ext-sodium.ini
+/usr/local/etc/php (no php.ini) + pool [www] (/usr/local/etc/php-fpm.d/zz-docker.conf)  sapi=fpm php=8.3.6 from /usr/local/include/php/main/php_version.h
+  file /usr/local/etc/php/conf.d/docker-php-ext-sodium.ini
+  file /usr/local/etc/php-fpm.d/zz-docker.conf
+[warnings]
+[findings]
+critical high   CVE-2026-109618 memory_limit=128M  at default  in /usr/local/etc/php (no php.ini)
+critical high   CVE-2026-109619 session.upload_progress.enabled=1  at default  in /usr/local/etc/php (no php.ini)
+critical medium FPM-001        listen=9000  at /usr/local/etc/php-fpm.d/zz-docker.conf:5  in /usr/local/etc/php (no php.ini) + pool [www] (/usr/local/etc/php-fpm.d/zz-docker.conf)
+high     high   CVE-2026-91766 allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   CFG-006        -=-  at -  in /usr/local/etc/php (no php.ini)
+medium   high   CVE-2024-11234 allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   CVE-2024-8925  enable_post_data_reading=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   CVE-2025-1736  allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   CVE-2025-1861  allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   CVE-2026-93682 allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   ERR-001        display_errors=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   EXEC-011       register_argc_argv=1  at default  in /usr/local/etc/php (no php.ini)
+medium   high   SESS-001       session.use_strict_mode=0  at default  in /usr/local/etc/php (no php.ini)
+medium   high   SESS-005       session.cookie_httponly=0  at default  in /usr/local/etc/php (no php.ini)
+medium   medium EXEC-002       allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+medium   medium EXEC-005       disable_functions=  at default  in /usr/local/etc/php (no php.ini)
+medium   medium FS-001         open_basedir=-  at default  in /usr/local/etc/php (no php.ini)
+medium   medium SESS-006       session.cookie_secure=0  at default  in /usr/local/etc/php (no php.ini)
+medium   medium SESS-009       session.save_path=  at default  in /usr/local/etc/php (no php.ini)
+low      high   CGI-002        cgi.fix_pathinfo=1  at default  in /usr/local/etc/php (no php.ini)
+low      high   CVE-2025-1217  allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+low      high   CVE-2025-1219  allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+low      high   CVE-2025-1734  allow_url_fopen=1  at default  in /usr/local/etc/php (no php.ini)
+low      high   ERR-002        display_startup_errors=1  at default  in /usr/local/etc/php (no php.ini)
+low      high   ERR-003        log_errors=0  at default  in /usr/local/etc/php (no php.ini)
+low      high   ERR-004        expose_php=1  at default  in /usr/local/etc/php (no php.ini)
+low      high   ERR-005        zend.exception_ignore_args=0  at default  in /usr/local/etc/php (no php.ini)
+low      high   EXEC-014       zend.assertions=1  at default  in /usr/local/etc/php (no php.ini)
+low      high   SESS-007       session.cookie_samesite=  at default  in /usr/local/etc/php (no php.ini)
+low      medium ERR-008        variables_order=EGPCS  at default  in /usr/local/etc/php (no php.ini)
+low      medium EXEC-008       enable_dl=1  at default  in /usr/local/etc/php (no php.ini)
+low      medium EXEC-017       session.upload_progress.enabled=1  at default  in /usr/local/etc/php (no php.ini)
+low      low    OPC-002        opcache.restrict_api=  at default  in /usr/local/etc/php (no php.ini)
+info     high   EXEC-016       include_path=.:/usr/share/php  at default  in /usr/local/etc/php (no php.ini)
+info     high   FS-008         user_ini.filename=.user.ini  at default  in /usr/local/etc/php (no php.ini)
+info     high   FS-010         upload_tmp_dir=-  at default  in /usr/local/etc/php (no php.ini)
+info     high   SESS-012       session.name=PHPSESSID  at default  in /usr/local/etc/php (no php.ini)
+info     low    ERR-010        disable_functions=  at default  in /usr/local/etc/php (no php.ini)
+info     low    FS-009         file_uploads=1  at default  in /usr/local/etc/php (no php.ini)
+info     low    OPC-003        opcache.validate_permission=0  at default  in /usr/local/etc/php (no php.ini)
+[summary]
+{"critical": 3, "high": 1, "medium": 15, "low": 14, "info": 7}

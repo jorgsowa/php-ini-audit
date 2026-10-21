@@ -5,8 +5,9 @@ from __future__ import annotations
 import difflib
 
 from .. import directives
-from ..model import Confidence
+from ..model import Confidence, SourceKind
 from .base import CRITICAL, HIGH, INFO, LOW, MEDIUM, Hit, rule, security_directives
+from .vulnerabilities import exposed_to
 
 _KNOWN_NAMES = sorted(set(directives.KNOWN) | set(directives.OBSOLETE))
 _KNOWN_LOWER = {n.lower(): n for n in _KNOWN_NAMES}
@@ -216,9 +217,13 @@ def conditional_sections(fctx):
     scope="file",
     description="Deprecated directives set to a non-default value still work but emit warnings and will "
     "disappear in a future release.",
-    recommendation="Plan to remove the directive.",
+    recommendation="Plan to remove the directive; remove it now from .user.ini/.htaccess on PHP versions "
+    "affected by CVE-2026-109619.",
 )
 def deprecated(fctx):
+    # Per-request deprecation warnings fire before request state is initialised, a CVE-2026-109619 trigger.
+    per_request = fctx.file.kind in (SourceKind.USER_INI, SourceKind.HTACCESS) and exposed_to(
+        "CVE-2026-109619", fctx.php_version)
     for directive in fctx.file.php_directives:
         since = directives.DEPRECATED.get(directive.name)
         if since is None:
@@ -227,5 +232,9 @@ def deprecated(fctx):
             continue
         if directive.value == directives.default(directive.name):
             continue
-        yield Hit(f"{directive.name} is deprecated since PHP {since}", (directive,))
+        if per_request:
+            yield Hit(f"{directive.name} is deprecated since PHP {since} and its per-request warning can trigger "
+                      "CVE-2026-109619", (directive,), severity=MEDIUM)
+        else:
+            yield Hit(f"{directive.name} is deprecated since PHP {since}", (directive,))
 
