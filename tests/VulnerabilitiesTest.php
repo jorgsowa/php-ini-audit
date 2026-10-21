@@ -13,7 +13,8 @@ use PhpIniAudit\Rules\Advisory;
 use PhpIniAudit\Rules\Context;
 use PhpIniAudit\Rules\Hit;
 use PhpIniAudit\Rules\Registry;
-use PhpIniAudit\Rules\Vulnerabilities;
+use PhpIniAudit\Rules\Version\DisclosedCves;
+use PhpIniAudit\Rules\Version\UnsupportedBranch;
 use PhpIniAudit\Severity;
 use PhpIniAudit\VersionEvidence;
 use PhpIniAudit\VersionFinder;
@@ -24,7 +25,7 @@ final class VulnerabilitiesTest extends TestCase
 {
     private static function advisory(string $cve): Advisory
     {
-        $advisory = Vulnerabilities::advisoryFor($cve);
+        $advisory = Registry::advisory($cve);
         if ($advisory === null) {
             throw new \LogicException("no advisory $cve");
         }
@@ -71,14 +72,6 @@ final class VulnerabilitiesTest extends TestCase
         $this->assertSame('8.1.16', $multipart->fixedFor([8, 1, 15]));
     }
 
-    public function testEveryAdvisoryIsRegistered(): void
-    {
-        $registry = Registry::all();
-        foreach (Vulnerabilities::advisories() as $advisory) {
-            $this->assertArrayHasKey($advisory->cve, $registry);
-        }
-    }
-
     // End of life
 
     /**
@@ -87,7 +80,7 @@ final class VulnerabilitiesTest extends TestCase
      */
     private static function eolHits(array $version, string $today): array
     {
-        $hits = Vulnerabilities::endOfLife(self::context($version), new \DateTimeImmutable($today));
+        $hits = (new UnsupportedBranch())->checkOn(self::context($version), new \DateTimeImmutable($today));
         return is_array($hits) ? $hits : iterator_to_array($hits, false);
     }
 
@@ -108,7 +101,7 @@ final class VulnerabilitiesTest extends TestCase
      */
     private static function cveHits(array $version, ?string $versionSource = null, bool $backports = false): array
     {
-        $hits = Vulnerabilities::disclosedCves(self::context($version, $versionSource, $backports));
+        $hits = (new DisclosedCves())->check(self::context($version, $versionSource, $backports));
         return is_array($hits) ? $hits : iterator_to_array($hits, false);
     }
 

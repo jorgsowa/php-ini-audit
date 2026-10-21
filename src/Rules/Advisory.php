@@ -2,41 +2,57 @@
 
 namespace PhpIniAudit\Rules;
 
+use PhpIniAudit\Confidence;
 use PhpIniAudit\Util;
+use PhpIniAudit\Versions;
 
-/** A known CVE whose exposure depends on the configuration. */
-final class Advisory
+/**
+ * A known CVE whose exposure depends on the configuration. ID is the CVE, FIXED the releases with the fix (one per
+ * branch, from php.net/ChangeLog-7.php and ChangeLog-8.php), and exposure() says whether this configuration reaches it.
+ */
+abstract class Advisory extends ConfigRule
 {
-    public string $cve;
-    public string $title;
-    public int $severity;
+    /** @var list<string> */
+    public const FIXED = [];
+
     /** @var list<string> */
     public array $fixed;
-    /** @var callable(Context): ?array (reason, evidence[, confidence]) or null when not exposed */
-    public $condition;
-    public string $description;
-    public string $mitigation;
-    public ?string $cwe = null;
-    public string $scope = 'config';
-    /** @var list<string>|null */
-    public ?array $sapis = null;
 
-    public function __construct(string $cve, string $title, int $severity, array $fixed, callable $condition,
-        string $description, string $mitigation)
+    public function __construct()
     {
-        $this->cve = $cve;
-        $this->title = $title;
-        $this->severity = $severity;
-        $this->fixed = $fixed;
-        $this->condition = $condition;
-        $this->description = $description;
-        $this->mitigation = $mitigation;
+        parent::__construct();
+        $this->fixed = static::FIXED;
+        $this->description .= ' Fixed in PHP ' . implode(', ', $this->fixed) . '.';
+        $this->references = ['https://nvd.nist.gov/vuln/detail/' . static::ID];
+    }
+
+    /** Why the configuration reaches the vulnerable code, or null when it does not. */
+    abstract public function exposure(Context $ctx): ?Exposure;
+
+    final public function check(Context $ctx): iterable
+    {
+        $version = $ctx->phpVersion;
+        if (!$version || $this->status($version) !== 'affected') {
+            return;
+        }
+        $exposure = $this->exposure($ctx);
+        if ($exposure === null) {
+            return;
+        }
+        $confidence = $exposure->confidence;
+        $message = 'PHP ' . Versions::formatVersion($version) . ' is affected (fixed in ' . $this->fixedFor($version)
+            . "); {$exposure->reason}";
+        if ($ctx->versionBackports) {
+            $message .= '; the distribution build may carry a backported fix';
+            $confidence = Confidence::LOW;
+        }
+        yield new Hit($message, $exposure->evidence, null, $confidence);
     }
 
     /** @return list<array{list<int>, int}> [branch, patch] pairs */
     public function fixes(): array
     {
-        return Vulnerabilities::fixesByBranch($this->fixed);
+        return Versions::fixesByBranch($this->fixed);
     }
 
     /** 'affected', 'possible' (patch level unknown), 'fixed' or 'untracked' (older than every listed fix). */
@@ -44,7 +60,7 @@ final class Advisory
     {
         $fixes = $this->fixes();
         $branch = [$version[0], $version[1]];
-        $patch = Vulnerabilities::patchFor($fixes, $branch);
+        $patch = Versions::patchFor($fixes, $branch);
         if ($patch !== null) {
             if (count($version) < 3) {
                 return 'possible';
@@ -70,19 +86,19 @@ final class Advisory
         return 'affected';
     }
 
+    /** Whether the version is, or may be, older than the fix; false when the version is unknown. */
+    public function exposes(?array $version): bool
+    {
+        return $version && in_array($this->status($version), ['affected', 'possible'], true);
+    }
+
     public function fixedFor(array $version): string
     {
         $branch = [$version[0], $version[1]];
-        $patch = Vulnerabilities::patchFor($this->fixes(), $branch);
+        $patch = Versions::patchFor($this->fixes(), $branch);
         if ($patch !== null) {
             return "{$branch[0]}.{$branch[1]}.$patch";
         }
         return 'a supported branch (' . implode(', ', $this->fixed) . ')';
-    }
-
-    /** @return ?array */
-    public function condition(Context $ctx): ?array
-    {
-        return ($this->condition)($ctx);
     }
 }

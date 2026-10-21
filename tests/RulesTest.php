@@ -4,6 +4,7 @@ namespace PhpIniAudit\Tests;
 
 use PhpIniAudit\Confidence;
 use PhpIniAudit\Finding;
+use PhpIniAudit\Rules\Category;
 use PhpIniAudit\Rules\Registry;
 use PhpIniAudit\Severity;
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,20 @@ final class RulesTest extends TestCase
             $this->assertContains($rule->scope, ['config', 'file', 'pool'], $rule->id);
             $this->assertMatchesRegularExpression('/^([A-Z]+-\d{3}|CVE-\d{4}-\d{4,})$/', $rule->id);
         }
+    }
+
+    public function testEveryRuleClassIsRegistered(): void
+    {
+        $registered = array_map('get_class', array_values(Registry::all()));
+        $classes = [];
+        foreach (Category::NAMESPACES as $namespace) {
+            foreach (glob(__DIR__ . "/../src/Rules/$namespace/*.php") ?: [] as $file) {
+                $classes[] = "PhpIniAudit\\Rules\\$namespace\\" . basename($file, '.php');
+            }
+        }
+        sort($registered);
+        sort($classes);
+        $this->assertSame($classes, $registered);
     }
 
     // Defaults

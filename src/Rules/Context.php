@@ -2,6 +2,7 @@
 
 namespace PhpIniAudit\Rules;
 
+use PhpIniAudit\Directive;
 use PhpIniAudit\EffectiveConfig;
 use PhpIniAudit\FpmPool;
 use PhpIniAudit\PathInspector;
@@ -52,7 +53,37 @@ final class Context
 
     public function isWeb(): bool
     {
-        return in_array($this->sapi, Base::WEB_SAPIS, true);
+        return in_array($this->sapi, Sapis::WEB, true);
+    }
+
+    public function usesFpm(): bool
+    {
+        return $this->sapi === 'fpm' || (bool) $this->pools;
+    }
+
+    /** @return array<string, true> lower-cased names in disable_functions */
+    public function disabledFunctions(): array
+    {
+        $disabled = [];
+        foreach ($this->get('disable_functions')->asList() as $name) {
+            $disabled[strtolower($name)] = true;
+        }
+        return $disabled;
+    }
+
+    /** The extension or zend_extension directive that loads $name, matched by file name. */
+    public function loadedExtension(string $name): ?Directive
+    {
+        foreach ($this->config->extensions as $directive) {
+            $path = str_replace('\\', '/', $directive->value);
+            $slash = strrpos($path, '/');
+            $base = strtolower($slash === false ? $path : substr($path, $slash + 1));
+            $stem = preg_replace('/^(php_)?|(\.so|\.dll)$/', '', $base);
+            if ($stem === $name) {
+                return $directive;
+            }
+        }
+        return null;
     }
 
     public function versionBelow(int $major, int $minor = 0): ?bool

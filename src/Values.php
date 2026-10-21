@@ -81,6 +81,32 @@ final class Values
         return array_values(array_filter(preg_split('/[,\s]+/', $value), 'strlen'));
     }
 
+    /** Split on runs of whitespace, dropping empty items. */
+    public static function splitWhitespace(string $text): array
+    {
+        return preg_split('/[\s\x1c-\x1f]+/', $text, -1, PREG_SPLIT_NO_EMPTY);
+    }
+
+    /** Path lists such as include_path and open_basedir: ";" on Windows, ":" elsewhere. */
+    public static function splitPathList(string $value): array
+    {
+        $separator = preg_match('/(^|;)[A-Za-z]:[\\\\\/]/', $value) ? ';' : ':';
+        $entries = [];
+        foreach (explode($separator, $value) as $entry) {
+            if (trim($entry) !== '') {
+                $entries[] = trim($entry);
+            }
+        }
+        return $entries;
+    }
+
+    /** session.save_path accepts "N;MODE;/path"; the directory is the last segment. */
+    public static function sessionDir(string $value): string
+    {
+        $separator = strrpos($value, ';');
+        return trim($separator === false ? $value : substr($value, $separator + 1));
+    }
+
     public static function parseOctal(?string $value): ?int
     {
         if ($value === null || $value === '') {

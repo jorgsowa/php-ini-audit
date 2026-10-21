@@ -47,6 +47,31 @@ final class Versions
     }
 
     /**
+     * @param list<string> $fixed releases such as "8.3.8"
+     * @return list<array{list<int>, int}> [branch, patch] pairs, one per branch in first-seen order
+     */
+    public static function fixesByBranch(array $fixed): array
+    {
+        $result = [];
+        foreach ($fixed as $text) {
+            [$major, $minor, $patch] = self::parseVersion($text);
+            $result["$major.$minor"] = [[$major, $minor], $patch];
+        }
+        return array_values($result);
+    }
+
+    /** @param list<array{list<int>, int}> $fixes */
+    public static function patchFor(array $fixes, array $branch): ?int
+    {
+        foreach ($fixes as [$fixBranch, $patch]) {
+            if ($fixBranch === $branch) {
+                return $patch;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Choose the evidence for one installation; ambiguous branches resolve by Homebrew keg or a unique shared path prefix.
      * @param list<VersionEvidence> $evidence
      * @param array{int, int}|null $branch

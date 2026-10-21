@@ -27,11 +27,23 @@ function source_files(): array
     return $files;
 }
 
-/** Every class in one file; each file keeps its own namespace statement, which also resets its imports. */
+/**
+ * Every class in one file; each file keeps its own namespace statement, which also resets its imports.
+ * A class must follow its parent, since an unresolved parent cannot be autoloaded from within the bundle.
+ */
 function bundle_source(): string
 {
+    $files = source_files();
+    $depth = [];
+    foreach ($files as $file) {
+        $class = 'PhpIniAudit\\' . str_replace('/', '\\', substr($file, 0, -4));
+        $depth[$file] = class_exists($class) ? count(class_parents($class)) : 0;
+    }
+    usort($files, static function (string $a, string $b) use ($depth): int {
+        return [$depth[$a], $a] <=> [$depth[$b], $b];
+    });
     $parts = ["<?php\n"];
-    foreach (source_files() as $file) {
+    foreach ($files as $file) {
         $code = file_get_contents(SRC . "/$file");
         $parts[] = "\n// src/$file\n" . preg_replace('/^<\?php\s*/', '', $code);
     }

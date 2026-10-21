@@ -7,7 +7,7 @@
  * Also bundles the scanner into docs/assets/php-ini-audit.php for the in-browser phpinfo() scanner.
  */
 
-use PhpIniAudit\Rules\Base;
+use PhpIniAudit\Rules\Category;
 use PhpIniAudit\Rules\Registry;
 use PhpIniAudit\Rules\Rule;
 use PhpIniAudit\Severity;
@@ -86,7 +86,7 @@ function category_rules(string $category): array
 function render_rules(): string
 {
     $parts = [];
-    foreach (Base::CATEGORIES as $category => $name) {
+    foreach (Category::NAMES as $category => $name) {
         $rules = category_rules($category);
         if (!$rules) {
             continue;
@@ -112,7 +112,7 @@ function render_severity_options(): string
 function render_category_options(): string
 {
     $options = '';
-    foreach (Base::CATEGORIES as $category => $name) {
+    foreach (Category::NAMES as $category => $name) {
         if (category_rules($category)) {
             $options .= "<option value=\"$category\">" . esc($name) . '</option>';
         }
@@ -123,7 +123,7 @@ function render_category_options(): string
 function render_category_table(): string
 {
     $rows = [];
-    foreach (Base::CATEGORIES as $category => $name) {
+    foreach (Category::NAMES as $category => $name) {
         $rules = category_rules($category);
         if ($rules) {
             $rows[] = "<tr><td><a href=\"rules.html#cat-$category\"><code>$category</code></a></td>"
