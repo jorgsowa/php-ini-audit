@@ -54,8 +54,8 @@ jobs:
       - name: Install php-cgi
         run: |
           sudo add-apt-repository -y ppa:ondrej/php
-          sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends php${{ matrix.php }}-cgi
+          sudo apt-get update -q -o Acquire::Retries=5
+          sudo apt-get install -y -q -o Acquire::Retries=5 --no-install-recommends php${{ matrix.php }}-cgi
       - name: Parity tests
         env:
           PHP_CGI: /usr/bin/php-cgi${{ matrix.php }}

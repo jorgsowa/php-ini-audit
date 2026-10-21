@@ -77,12 +77,16 @@ echo "\\n<!--pia-values-->", json_encode(ini_get_all(null, false));
 """
 
 
+def bare_env():
+    return {"PATH": os.environ.get("PATH", ""), "PHP_INI_SCAN_DIR": ""}
+
+
 def output(binary, ini, source):
     """Return what the PHP script `source` prints under php-cgi with only the given php.ini."""
     script = Path(ini).parent / "pia_script.php"
     script.write_text(source)
     try:
-        completed = subprocess.run([binary, "-c", str(ini), "-q", str(script)], env={"PATH": os.environ.get("PATH", "")},
+        completed = subprocess.run([binary, "-c", str(ini), "-q", str(script)], env=bare_env(),
                                    capture_output=True, text=True, timeout=30, check=True)
     finally:
         script.unlink()
@@ -97,7 +101,7 @@ def phpinfo(binary, ini):
     script = Path(ini).parent / "pia_info.php"
     script.write_text(PHPINFO_SCRIPT)
     try:
-        completed = subprocess.run([binary, "-c", str(ini), "-q", str(script)], env={"PATH": os.environ.get("PATH", "")},
+        completed = subprocess.run([binary, "-c", str(ini), "-q", str(script)], env=bare_env(),
                                    capture_output=True, text=True, timeout=30, check=True)
     finally:
         script.unlink()
