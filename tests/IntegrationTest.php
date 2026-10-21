@@ -209,13 +209,38 @@ final class IntegrationTest extends TestCase
         }
     }
 
-    public function testProcessMissingPathIsAWarning(): void
+    public function testProcessMissingPathIsAUsageError(): void
     {
-        [$code, $stdout] = $this->runBinary(Helpers::FIXTURES . '/hardened/php.ini', Helpers::FIXTURES . '/nope.ini',
-            '--format', 'json');
-        $this->assertSame(0, $code);
+        [$code, $stdout, $stderr] = $this->runBinary(Helpers::FIXTURES . '/hardened/php.ini',
+            Helpers::FIXTURES . '/nope.ini', '--format', 'json');
+        $this->assertSame(2, $code);
+        $this->assertStringContainsString('cannot read', $stderr);
         $warnings = self::json($stdout)['warnings'];
         $this->assertTrue(self::anyContains($warnings, 'nope.ini'), json_encode($warnings));
+    }
+
+    public function testProcessNothingAuditedIsAUsageError(): void
+    {
+        $missing = Helpers::FIXTURES . '/nope';
+        $this->assertSame(2, $this->runBinary($missing)[0]);
+        $this->assertSame(2, $this->runBinary($missing, '--fail-on', 'high')[0]);
+        $this->assertSame(2, $this->runBinary('--ini', Helpers::FIXTURES . '/nope.ini')[0]);
+        $empty = Helpers::tempDir();
+        try {
+            [$code, , $stderr] = $this->runBinary($empty);
+            $this->assertSame(2, $code);
+            $this->assertStringContainsString('no PHP configuration audited', $stderr);
+        } finally {
+            Helpers::removeTree($empty);
+        }
+    }
+
+    public function testProcessUnwritableOutputIsAUsageError(): void
+    {
+        [$code, , $stderr] = $this->runBinary(Helpers::FIXTURES . '/hardened/php.ini', '-o',
+            Helpers::FIXTURES . '/nope/report.txt');
+        $this->assertSame(2, $code);
+        $this->assertStringContainsString('cannot write', $stderr);
     }
 
     public function testProcessTextReportIsPlainWhenPiped(): void

@@ -576,6 +576,16 @@ TXT;
             }
             return self::report($args, Phpinfo::audit($text, $options));
         }
+        $explicit = array_merge($args['paths'], $args['scan_dir'], $args['pool'], $args['webroot']);
+        if ($args['ini'] !== null && $args['ini'] !== '') {
+            $explicit[] = $args['ini'];
+        }
+        $unreadable = [];
+        foreach ($explicit as $path) {
+            if (!self::isReadable($fs, self::displayPath($fs, $path))) {
+                $unreadable[] = $path;
+            }
+        }
         $discovery = self::discover($args, $fs);
         $systemScan = !($args['paths'] || ($args['ini'] !== null && $args['ini'] !== '') || $args['scan_dir']
             || $args['pool']);
@@ -584,7 +594,17 @@ TXT;
         $options->webroots = array_map(static function (string $w) use ($fs): string {
             return self::displayPath($fs, $w);
         }, $args['webroot']);
-        return self::report($args, (new Auditor($fs, $options))->run($discovery));
+        return self::report($args, (new Auditor($fs, $options))->run($discovery), $unreadable);
+    }
+
+    private static function isReadable(FileSystem $fs, string $path): bool
+    {
+        try {
+            $host = $fs->toHost($fs->resolve($path));
+        } catch (ReadError $exception) {
+            return false;
+        }
+        return ($fs->isDir($path) || $fs->isFile($path)) && is_readable($host);
     }
 
     private static function isatty(): bool
@@ -599,7 +619,8 @@ TXT;
         return function_exists('posix_isatty') && posix_isatty($stdout);
     }
 
-    private static function report(array $args, AuditResult $result): int
+    /** @param list<string> $unreadable explicitly passed paths that cannot be read */
+    private static function report(array $args, AuditResult $result, array $unreadable = []): int
     {
         $output = $args['output'];
         $toFile = $output !== null && $output !== '';
@@ -617,10 +638,20 @@ TXT;
         if ($toFile) {
             if (@file_put_contents($output, $text) === false) {
                 self::err("error: cannot write $output\n");
-                return self::EXIT_FINDINGS;
+                return self::EXIT_USAGE;
             }
         } else {
             self::out($text);
+        }
+
+        foreach ($unreadable as $path) {
+            self::err("error: cannot read $path\n");
+        }
+        if (!$result->targets) {
+            self::err("error: no PHP configuration audited\n");
+        }
+        if ($unreadable || !$result->targets) {
+            return self::EXIT_USAGE;
         }
 
         if ($args['fail_on'] !== null) {

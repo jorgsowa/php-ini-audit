@@ -112,7 +112,7 @@ php-ini-audit --root rootfs</code></pre>
       <tbody>
         <tr><td><code>0</code></td><td>Audit completed. Findings do not change the exit code unless <code>--fail-on</code> is given.</td></tr>
         <tr><td><code>1</code></td><td>A finding at or above the <code>--fail-on</code> threshold exists.</td></tr>
-        <tr><td><code>2</code></td><td>Usage error: unknown rule or category, invalid <code>--root</code>.</td></tr>
+        <tr><td><code>2</code></td><td>Usage error: unknown rule or category, invalid <code>--root</code>, an explicitly passed path that cannot be read, no PHP configuration audited, or a report that cannot be written with <code>-o</code>.</td></tr>
       </tbody>
     </table>
   </div>
