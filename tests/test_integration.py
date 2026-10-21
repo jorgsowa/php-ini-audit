@@ -34,7 +34,7 @@ class DebianFixtureTest(unittest.TestCase):
         self.assertTrue(any("pool [www]" in n for n in names))
         self.assertTrue(any("[PATH=/var/www/legacy]" in n for n in names))
         fpm = next(t for t in self.report["targets"] if t["name"] == "/etc/php/8.2/fpm/php.ini")
-        self.assertEqual(fpm["php_version"], "8.2")
+        self.assertEqual(fpm["php_version"], "8.2.7")
         self.assertEqual(fpm["sapi"], "fpm")
 
     def test_pool_findings_belong_to_pool(self):

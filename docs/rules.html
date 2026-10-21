@@ -24,7 +24,7 @@
 <main class="wrap">
   <h1>Rules</h1>
   <p class="lead">
-    <!-- generated:rule-count -->98<!-- /generated:rule-count --> rules. The severity shown is the rule's default; an individual finding can be raised or
+    <!-- generated:rule-count -->127<!-- /generated:rule-count --> rules. The severity shown is the rule's default; an individual finding can be raised or
     lowered by context, such as the SAPI, the profile or a related setting.
   </p>
 
@@ -32,7 +32,7 @@
     <label class="visually-hidden" for="rule-search">Search rules</label>
     <input id="rule-search" type="search" placeholder="Search id, title, directive, CWE…" autocomplete="off">
     <select id="rule-severity" aria-label="Severity"><!-- generated:severity-options --><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="info">Info</option><!-- /generated:severity-options --></select>
-    <select id="rule-category" aria-label="Category"><!-- generated:category-options --><option value="">All categories</option><option value="EXEC">Code execution</option><option value="FS">Filesystem and paths</option><option value="ERR">Information disclosure</option><option value="SESS">Session security</option><option value="RES">Resource limits and DoS</option><option value="CGI">CGI / FastCGI</option><option value="EXT">Debug and profiling extensions</option><option value="OPC">OPcache</option><option value="DB">Database and credentials</option><option value="ENC">Character encoding</option><option value="CFG">Configuration hygiene</option><option value="FPM">PHP-FPM pools</option><option value="HTA">Apache .htaccess</option><!-- /generated:category-options --></select>
+    <select id="rule-category" aria-label="Category"><!-- generated:category-options --><option value="">All categories</option><option value="EXEC">Code execution</option><option value="FS">Filesystem and paths</option><option value="ERR">Information disclosure</option><option value="SESS">Session security</option><option value="RES">Resource limits and DoS</option><option value="CGI">CGI / FastCGI</option><option value="EXT">Debug and profiling extensions</option><option value="OPC">OPcache</option><option value="DB">Database and credentials</option><option value="ENC">Character encoding</option><option value="CFG">Configuration hygiene</option><option value="FPM">PHP-FPM pools</option><option value="HTA">Apache .htaccess</option><option value="VULN">PHP version support</option><option value="CVE">Known vulnerabilities</option><!-- /generated:category-options --></select>
     <span class="count" id="rule-count" aria-live="polite"></span>
   </div>
 
@@ -1053,6 +1053,302 @@
     
     <p class="fix"><b>Fix:</b> Map only .php to the PHP handler, inside &lt;FilesMatch &quot;\.php$&quot;&gt;.</p>
     
+  </div>
+</details>
+</section>
+<section class="category" data-category="VULN">
+<h2 class="category-heading" id="cat-VULN">PHP version support <a class="anchor" href="#cat-VULN">#</a></h2>
+<details class="rule" id="VULN-001" data-severity="high" data-category="VULN" data-search="vuln-001 php branch without security support branches past their end of life receive no security fixes, so every vulnerability found after that date stays open. a branch nearing its end of life is reported early.  cwe-1104">
+  <summary><span class="id">VULN-001</span><span class="title">PHP branch without security support</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP version support</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/1104.html">CWE-1104</a></span></div>
+    <p>Branches past their end of life receive no security fixes, so every vulnerability found after that date stays open. A branch nearing its end of life is reported early.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade to a supported PHP branch (see php.net/supported-versions.php).</p>
+    <ul><li><a href="https://www.php.net/supported-versions.php">https://www.php.net/supported-versions.php</a></li><li><a href="https://www.php.net/eol.php">https://www.php.net/eol.php</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="VULN-002" data-severity="info" data-category="VULN" data-search="vuln-002 known vulnerabilities depend on the exact php version some known cves apply to this configuration, but the exact php patch version could not be read from the system (php_version.h, dpkg, apk or homebrew), so the scanner cannot tell whether the fix is installed.  ">
+  <summary><span class="id">VULN-002</span><span class="title">Known vulnerabilities depend on the exact PHP version</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP version support</span><span><b>Scope</b> config</span></div>
+    <p>Some known CVEs apply to this configuration, but the exact PHP patch version could not be read from the system (php_version.h, dpkg, apk or Homebrew), so the scanner cannot tell whether the fix is installed.</p>
+    
+    <p class="fix"><b>Fix:</b> Pass --php-version X.Y.Z (from `php -v` run by you), or scan with --root so package metadata can be read.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="CVE">
+<h2 class="category-heading" id="cat-CVE">Known vulnerabilities <a class="anchor" href="#cat-CVE">#</a></h2>
+<details class="rule" id="CVE-2018-10545" data-severity="medium" data-category="CVE" data-search="cve-2018-10545 fpm workers can bypass opcache access controls dumpable fpm child processes let one pool read another pool&#x27;s opcache data via ptrace. fixed in php 7.0.29, 7.1.16, 7.2.4.  cwe-284">
+  <summary><span class="id">CVE-2018-10545</span><span class="title">FPM workers can bypass OPcache access controls</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> fpm, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/284.html">CWE-284</a></span></div>
+    <p>Dumpable FPM child processes let one pool read another pool&#x27;s OPcache data via ptrace. Fixed in PHP 7.0.29, 7.1.16, 7.2.4.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade; keep process.dumpable = no.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2018-10545">https://nvd.nist.gov/vuln/detail/CVE-2018-10545</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2018-19518" data-severity="high" data-category="CVE" data-search="cve-2018-19518 imap_open() runs shell commands before the fix, rsh/ssh mailbox names in imap_open() could inject commands; there was no imap.enable_insecure_rsh switch. fixed in php 7.0.33, 7.1.25, 7.2.13.  cwe-78">
+  <summary><span class="id">CVE-2018-19518</span><span class="title">imap_open() runs shell commands</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/78.html">CWE-78</a></span></div>
+    <p>Before the fix, rsh/ssh mailbox names in imap_open() could inject commands; there was no imap.enable_insecure_rsh switch. Fixed in PHP 7.0.33, 7.1.25, 7.2.13.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade and keep imap.enable_insecure_rsh = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2018-19518">https://nvd.nist.gov/vuln/detail/CVE-2018-19518</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2019-11043" data-severity="critical" data-category="CVE" data-search="cve-2019-11043 php-fpm env_path_info underflow (remote code execution) with nginx configurations that use fastcgi_split_path_info with a regex that can be broken by a newline, a crafted url corrupts fpm memory and leads to remote code execution (exploited in the wild). fixed in php 7.1.33, 7.2.24, 7.3.11.  cwe-787">
+  <summary><span class="id">CVE-2019-11043</span><span class="title">PHP-FPM env_path_info underflow (remote code execution)</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> fpm, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/787.html">CWE-787</a></span></div>
+    <p>With nginx configurations that use fastcgi_split_path_info with a regex that can be broken by a newline, a crafted URL corrupts FPM memory and leads to remote code execution (exploited in the wild). Fixed in PHP 7.1.33, 7.2.24, 7.3.11.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade; add try_files $fastcgi_script_name =404 before fastcgi_pass.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2019-11043">https://nvd.nist.gov/vuln/detail/CVE-2019-11043</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2019-11048" data-severity="medium" data-category="CVE" data-search="cve-2019-11048 upload temp files left behind by long names long file or variable names in multipart requests exhaust memory and leave temporary upload files on disk. fixed in php 7.2.31, 7.3.18, 7.4.6.  cwe-190">
+  <summary><span class="id">CVE-2019-11048</span><span class="title">Upload temp files left behind by long names</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/190.html">CWE-190</a></span></div>
+    <p>Long file or variable names in multipart requests exhaust memory and leave temporary upload files on disk. Fixed in PHP 7.2.31, 7.3.18, 7.4.6.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2019-11048">https://nvd.nist.gov/vuln/detail/CVE-2019-11048</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2020-7062" data-severity="medium" data-category="CVE" data-search="cve-2020-7062 crash in session upload progress a crafted upload with session upload progress enabled dereferences a null pointer and crashes the worker. fixed in php 7.2.28, 7.3.15, 7.4.3.  cwe-476">
+  <summary><span class="id">CVE-2020-7062</span><span class="title">Crash in session upload progress</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/476.html">CWE-476</a></span></div>
+    <p>A crafted upload with session upload progress enabled dereferences a NULL pointer and crashes the worker. Fixed in PHP 7.2.28, 7.3.15, 7.4.3.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set session.upload_progress.enabled = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2020-7062">https://nvd.nist.gov/vuln/detail/CVE-2020-7062</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2020-7070" data-severity="medium" data-category="CVE" data-search="cve-2020-7070 encoded cookie names allow __host- spoofing php url-decodes cookie names, so a crafted name is read as a __host- cookie. fixed in php 7.2.34, 7.3.23, 7.4.11.  cwe-565">
+  <summary><span class="id">CVE-2020-7070</span><span class="title">Encoded cookie names allow __Host- spoofing</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/565.html">CWE-565</a></span></div>
+    <p>PHP URL-decodes cookie names, so a crafted name is read as a __Host- cookie. Fixed in PHP 7.2.34, 7.3.23, 7.4.11.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2020-7070">https://nvd.nist.gov/vuln/detail/CVE-2020-7070</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2021-21703" data-severity="high" data-category="CVE" data-search="cve-2021-21703 php-fpm local privilege escalation to root a compromised fpm worker can write to shared memory of the root master process and escalate to root. fixed in php 7.3.32, 7.4.25, 8.0.12.  cwe-787">
+  <summary><span class="id">CVE-2021-21703</span><span class="title">PHP-FPM local privilege escalation to root</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> fpm, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/787.html">CWE-787</a></span></div>
+    <p>A compromised FPM worker can write to shared memory of the root master process and escalate to root. Fixed in PHP 7.3.32, 7.4.25, 8.0.12.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-21703">https://nvd.nist.gov/vuln/detail/CVE-2021-21703</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2022-31629" data-severity="medium" data-category="CVE" data-search="cve-2022-31629 __host- cookie names can be spoofed http variable name mangling lets an attacker set cookies that php treats as __host- prefixed. fixed in php 7.4.32, 8.0.24, 8.1.11.  cwe-565">
+  <summary><span class="id">CVE-2022-31629</span><span class="title">__Host- cookie names can be spoofed</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/565.html">CWE-565</a></span></div>
+    <p>HTTP variable name mangling lets an attacker set cookies that PHP treats as __Host- prefixed. Fixed in PHP 7.4.32, 8.0.24, 8.1.11.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2022-31629">https://nvd.nist.gov/vuln/detail/CVE-2022-31629</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2023-0662" data-severity="medium" data-category="CVE" data-search="cve-2023-0662 denial of service through multipart request bodies requests with many multipart parts consume excessive cpu; the fix introduced max_multipart_body_parts. fixed in php 8.0.28, 8.1.16, 8.2.3.  cwe-400">
+  <summary><span class="id">CVE-2023-0662</span><span class="title">Denial of service through multipart request bodies</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/400.html">CWE-400</a></span></div>
+    <p>Requests with many multipart parts consume excessive CPU; the fix introduced max_multipart_body_parts. Fixed in PHP 8.0.28, 8.1.16, 8.2.3.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade and keep max_input_vars/max_file_uploads modest.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-0662">https://nvd.nist.gov/vuln/detail/CVE-2023-0662</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-11234" data-severity="medium" data-category="CVE" data-search="cve-2024-11234 crlf injection through stream proxy configuration php&#x27;s http:// stream wrapper with a proxy configured allows crlf injection in the request uri. fixed in php 8.1.31, 8.2.26, 8.3.14.  cwe-93">
+  <summary><span class="id">CVE-2024-11234</span><span class="title">CRLF injection through stream proxy configuration</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/93.html">CWE-93</a></span></div>
+    <p>PHP&#x27;s http:// stream wrapper with a proxy configured allows CRLF injection in the request URI. Fixed in PHP 8.1.31, 8.2.26, 8.3.14.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-11234">https://nvd.nist.gov/vuln/detail/CVE-2024-11234</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-1874" data-severity="high" data-category="CVE" data-search="cve-2024-1874 command injection through proc_open() on windows array-form proc_open() commands are not escaped correctly for .bat/.cmd files on windows. fixed in php 8.1.28, 8.2.18, 8.3.6.  cwe-78">
+  <summary><span class="id">CVE-2024-1874</span><span class="title">Command injection through proc_open() on Windows</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/78.html">CWE-78</a></span></div>
+    <p>Array-form proc_open() commands are not escaped correctly for .bat/.cmd files on Windows. Fixed in PHP 8.1.28, 8.2.18, 8.3.6.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or add proc_open to disable_functions if unused.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-1874">https://nvd.nist.gov/vuln/detail/CVE-2024-1874</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-2756" data-severity="medium" data-category="CVE" data-search="cve-2024-2756 __host-/__secure- cookie prefix bypass cookie name mangling lets a non-secure origin set cookies that php reads as __host-/__secure- cookies (incomplete fix of cve-2022-31629). fixed in php 8.1.28, 8.2.18, 8.3.6.  cwe-565">
+  <summary><span class="id">CVE-2024-2756</span><span class="title">__Host-/__Secure- cookie prefix bypass</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/565.html">CWE-565</a></span></div>
+    <p>Cookie name mangling lets a non-secure origin set cookies that PHP reads as __Host-/__Secure- cookies (incomplete fix of CVE-2022-31629). Fixed in PHP 8.1.28, 8.2.18, 8.3.6.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-2756">https://nvd.nist.gov/vuln/detail/CVE-2024-2756</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-4577" data-severity="critical" data-category="CVE" data-search="cve-2024-4577 php-cgi argument injection on windows windows &#x27;best-fit&#x27; character conversion lets a soft hyphen in the query string become a php-cgi command-line option, giving remote code execution (exploited in the wild, e.g. default xampp). fixed in php 8.1.29, 8.2.20, 8.3.8.  cwe-78">
+  <summary><span class="id">CVE-2024-4577</span><span class="title">php-cgi argument injection on Windows</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> cgi, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/78.html">CWE-78</a></span></div>
+    <p>Windows &#x27;Best-Fit&#x27; character conversion lets a soft hyphen in the query string become a php-cgi command-line option, giving remote code execution (exploited in the wild, e.g. default XAMPP). Fixed in PHP 8.1.29, 8.2.20, 8.3.8.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade; until then do not expose php-cgi (use PHP-FPM or mod_php).</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-4577">https://nvd.nist.gov/vuln/detail/CVE-2024-4577</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-5585" data-severity="high" data-category="CVE" data-search="cve-2024-5585 bypass of the cve-2024-1874 fix trailing spaces in the command name bypass the cve-2024-1874 escaping fix for proc_open() on windows. fixed in php 8.1.29, 8.2.20, 8.3.8.  cwe-78">
+  <summary><span class="id">CVE-2024-5585</span><span class="title">Bypass of the CVE-2024-1874 fix</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/78.html">CWE-78</a></span></div>
+    <p>Trailing spaces in the command name bypass the CVE-2024-1874 escaping fix for proc_open() on Windows. Fixed in PHP 8.1.29, 8.2.20, 8.3.8.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or add proc_open to disable_functions if unused.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-5585">https://nvd.nist.gov/vuln/detail/CVE-2024-5585</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-8925" data-severity="medium" data-category="CVE" data-search="cve-2024-8925 erroneous parsing of multipart form data malformed multipart boundaries are parsed inconsistently with upstream proxies and wafs, letting attackers smuggle form fields past filtering. fixed in php 8.1.30, 8.2.24, 8.3.12.  cwe-436">
+  <summary><span class="id">CVE-2024-8925</span><span class="title">Erroneous parsing of multipart form data</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/436.html">CWE-436</a></span></div>
+    <p>Malformed multipart boundaries are parsed inconsistently with upstream proxies and WAFs, letting attackers smuggle form fields past filtering. Fixed in PHP 8.1.30, 8.2.24, 8.3.12.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-8925">https://nvd.nist.gov/vuln/detail/CVE-2024-8925</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-8926" data-severity="critical" data-category="CVE" data-search="cve-2024-8926 bypass of the cve-2024-4577 fix certain windows code pages still allow php-cgi argument injection after the cve-2024-4577 fix. fixed in php 8.1.30, 8.2.24, 8.3.12.  cwe-88">
+  <summary><span class="id">CVE-2024-8926</span><span class="title">Bypass of the CVE-2024-4577 fix</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> cgi, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/88.html">CWE-88</a></span></div>
+    <p>Certain Windows code pages still allow php-cgi argument injection after the CVE-2024-4577 fix. Fixed in PHP 8.1.30, 8.2.24, 8.3.12.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade; do not expose php-cgi on Windows.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-8926">https://nvd.nist.gov/vuln/detail/CVE-2024-8926</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-8927" data-severity="high" data-category="CVE" data-search="cve-2024-8927 cgi.force_redirect bypass an environment variable collision lets requests bypass the cgi.force_redirect protection and invoke php-cgi directly. fixed in php 8.1.30, 8.2.24, 8.3.12.  cwe-284">
+  <summary><span class="id">CVE-2024-8927</span><span class="title">cgi.force_redirect bypass</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>SAPIs</b> cgi, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/284.html">CWE-284</a></span></div>
+    <p>An environment variable collision lets requests bypass the cgi.force_redirect protection and invoke php-cgi directly. Fixed in PHP 8.1.30, 8.2.24, 8.3.12.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade; do not expose php-cgi directly.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-8927">https://nvd.nist.gov/vuln/detail/CVE-2024-8927</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2024-9026" data-severity="low" data-category="CVE" data-search="cve-2024-9026 php-fpm worker output can alter log entries with catch_workers_output, a worker can emit messages that strip characters from log lines, hiding or forging log entries. fixed in php 8.1.30, 8.2.24, 8.3.12.  cwe-117">
+  <summary><span class="id">CVE-2024-9026</span><span class="title">PHP-FPM worker output can alter log entries</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/117.html">CWE-117</a></span></div>
+    <p>With catch_workers_output, a worker can emit messages that strip characters from log lines, hiding or forging log entries. Fixed in PHP 8.1.30, 8.2.24, 8.3.12.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or disable catch_workers_output.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-9026">https://nvd.nist.gov/vuln/detail/CVE-2024-9026</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2025-1217" data-severity="low" data-category="CVE" data-search="cve-2025-1217 http wrapper mishandles folded headers php&#x27;s http:// stream wrapper does not handle folded headers, so response headers can be misinterpreted. fixed in php 8.1.32, 8.2.28, 8.3.19, 8.4.5.  cwe-436">
+  <summary><span class="id">CVE-2025-1217</span><span class="title">HTTP wrapper mishandles folded headers</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/436.html">CWE-436</a></span></div>
+    <p>PHP&#x27;s http:// stream wrapper does not handle folded headers, so response headers can be misinterpreted. Fixed in PHP 8.1.32, 8.2.28, 8.3.19, 8.4.5.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1217">https://nvd.nist.gov/vuln/detail/CVE-2025-1217</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2025-1219" data-severity="low" data-category="CVE" data-search="cve-2025-1219 libxml uses the wrong content type after redirects remote documents loaded by dom/simplexml through redirects are parsed with the wrong charset. fixed in php 8.1.32, 8.2.28, 8.3.19, 8.4.5.  cwe-436">
+  <summary><span class="id">CVE-2025-1219</span><span class="title">libxml uses the wrong content type after redirects</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/436.html">CWE-436</a></span></div>
+    <p>Remote documents loaded by DOM/SimpleXML through redirects are parsed with the wrong charset. Fixed in PHP 8.1.32, 8.2.28, 8.3.19, 8.4.5.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1219">https://nvd.nist.gov/vuln/detail/CVE-2025-1219</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2025-1734" data-severity="low" data-category="CVE" data-search="cve-2025-1734 http wrapper accepts headers without a colon php&#x27;s http:// stream wrapper accepts malformed response headers, enabling response confusion. fixed in php 8.1.32, 8.2.28, 8.3.19, 8.4.5.  cwe-436">
+  <summary><span class="id">CVE-2025-1734</span><span class="title">HTTP wrapper accepts headers without a colon</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/436.html">CWE-436</a></span></div>
+    <p>PHP&#x27;s http:// stream wrapper accepts malformed response headers, enabling response confusion. Fixed in PHP 8.1.32, 8.2.28, 8.3.19, 8.4.5.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1734">https://nvd.nist.gov/vuln/detail/CVE-2025-1734</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2025-1736" data-severity="medium" data-category="CVE" data-search="cve-2025-1736 http wrapper header check may omit headers php&#x27;s http:// stream wrapper may miss user-supplied authorization headers and send unintended headers. fixed in php 8.1.32, 8.2.28, 8.3.19, 8.4.5.  cwe-20">
+  <summary><span class="id">CVE-2025-1736</span><span class="title">HTTP wrapper header check may omit headers</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/20.html">CWE-20</a></span></div>
+    <p>PHP&#x27;s http:// stream wrapper may miss user-supplied Authorization headers and send unintended headers. Fixed in PHP 8.1.32, 8.2.28, 8.3.19, 8.4.5.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1736">https://nvd.nist.gov/vuln/detail/CVE-2025-1736</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2025-1861" data-severity="medium" data-category="CVE" data-search="cve-2025-1861 http wrapper truncates redirect locations php&#x27;s http:// stream wrapper truncates location headers to 1024 bytes, so redirects can lead somewhere else. fixed in php 8.1.32, 8.2.28, 8.3.19, 8.4.5.  cwe-131">
+  <summary><span class="id">CVE-2025-1861</span><span class="title">HTTP wrapper truncates redirect locations</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/131.html">CWE-131</a></span></div>
+    <p>PHP&#x27;s http:// stream wrapper truncates Location headers to 1024 bytes, so redirects can lead somewhere else. Fixed in PHP 8.1.32, 8.2.28, 8.3.19, 8.4.5.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2025-1861">https://nvd.nist.gov/vuln/detail/CVE-2025-1861</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2026-6735" data-severity="medium" data-category="CVE" data-search="cve-2026-6735 xss in the php-fpm status page the fpm status endpoint reflects request data without escaping in its html output. fixed in php 8.2.31, 8.3.31, 8.4.21, 8.5.6.  cwe-79">
+  <summary><span class="id">CVE-2026-6735</span><span class="title">XSS in the PHP-FPM status page</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/79.html">CWE-79</a></span></div>
+    <p>The FPM status endpoint reflects request data without escaping in its HTML output. Fixed in PHP 8.2.31, 8.3.31, 8.4.21, 8.5.6.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or remove pm.status_path / restrict it to administrators.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-6735">https://nvd.nist.gov/vuln/detail/CVE-2026-6735</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2026-91766" data-severity="high" data-category="CVE" data-search="cve-2026-91766 http wrapper leaks credentials across origins on redirect php&#x27;s http:// stream wrapper forwards credentials to a different origin when following redirects. fixed in php 8.2.34, 8.3.35, 8.4.26, 8.5.11.  cwe-200">
+  <summary><span class="id">CVE-2026-91766</span><span class="title">HTTP wrapper leaks credentials across origins on redirect</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/200.html">CWE-200</a></span></div>
+    <p>PHP&#x27;s http:// stream wrapper forwards credentials to a different origin when following redirects. Fixed in PHP 8.2.34, 8.3.35, 8.4.26, 8.5.11.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-91766">https://nvd.nist.gov/vuln/detail/CVE-2026-91766</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2026-91768" data-severity="high" data-category="CVE" data-search="cve-2026-91768 ipv6 bypass of listen.allowed_clients listen.allowed_clients compares ipv6 addresses partially, so clients outside the list can reach the unauthenticated fastcgi port. fixed in php 8.2.34, 8.3.35, 8.4.26, 8.5.11.  cwe-284">
+  <summary><span class="id">CVE-2026-91768</span><span class="title">IPv6 bypass of listen.allowed_clients</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/284.html">CWE-284</a></span></div>
+    <p>listen.allowed_clients compares IPv6 addresses partially, so clients outside the list can reach the unauthenticated FastCGI port. Fixed in PHP 8.2.34, 8.3.35, 8.4.26, 8.5.11.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade; also firewall the FastCGI port or use a Unix socket.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-91768">https://nvd.nist.gov/vuln/detail/CVE-2026-91768</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CVE-2026-93682" data-severity="medium" data-category="CVE" data-search="cve-2026-93682 http wrapper out-of-bounds read on empty redirect a redirect with an empty location header makes php&#x27;s http:// stream wrapper read out of bounds. fixed in php 8.2.34, 8.3.35, 8.4.26, 8.5.11.  cwe-125">
+  <summary><span class="id">CVE-2026-93682</span><span class="title">HTTP wrapper out-of-bounds read on empty redirect</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Known vulnerabilities</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/125.html">CWE-125</a></span></div>
+    <p>A redirect with an empty Location header makes PHP&#x27;s http:// stream wrapper read out of bounds. Fixed in PHP 8.2.34, 8.3.35, 8.4.26, 8.5.11.</p>
+    
+    <p class="fix"><b>Fix:</b> Upgrade, or set allow_url_fopen = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-93682">https://nvd.nist.gov/vuln/detail/CVE-2026-93682</a></li></ul>
   </div>
 </details>
 </section>

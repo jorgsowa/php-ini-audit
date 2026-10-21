@@ -49,7 +49,7 @@ Useful options:
 | Option | Purpose |
 | --- | --- |
 | `--profile production\|development` | Development lowers disclosure findings and skips production-only rules |
-| `--sapi`, `--php-version` | Override what is inferred from the path (`/etc/php/8.2/fpm/` → fpm, 8.2) |
+| `--sapi`, `--php-version X.Y[.Z]` | Override what is inferred (`/etc/php/8.2/fpm/` → fpm, 8.2); an exact version enables CVE matching |
 | `--path-checks auto\|on\|off` | Permission checks on referenced paths; `auto` = on for host and `--root` scans |
 | `--min-severity`, `--only`, `--skip` | Filter by severity, rule id or category (`--only SESS --skip SESS-012`) |
 | `--format text\|json\|sarif\|markdown`, `-o FILE` | SARIF works with GitHub code scanning |
@@ -71,6 +71,11 @@ Useful options:
 4. **Rules** run against each effective configuration. Unset directives are checked against PHP's
    built-in defaults, which is where many real problems come from (`display_errors`, `register_argc_argv`,
    `session.use_strict_mode`, ...). Web-only rules are skipped for CLI configurations.
+5. **Known vulnerabilities**: each tracked CVE is reported when the PHP patch release predates the fix *and*
+   the configuration uses the vulnerable feature (php-cgi on Windows, `allow_url_fopen`, FPM
+   `catch_workers_output`, ...). The exact version is read from `php_version.h`, the dpkg/apk databases or
+   Homebrew links, never by running PHP. Debian/Ubuntu package versions get low confidence because of
+   backported fixes. Pass `--php-version X.Y.Z` for copied configs.
 
 Each finding carries a severity (critical → info), a confidence (high/medium/low), the effective value and
 its source, a CWE where applicable and a recommendation.
@@ -91,6 +96,33 @@ its source, a CWE where applicable and a recommendation.
 | CFG-010 | info | Configuration hygiene | Deprecated directive |
 | CGI-001 | high | CGI / FastCGI | php-cgi callable without web-server redirect |
 | CGI-002 | medium | CGI / FastCGI | PATH_INFO fix-up executes files by path prefix |
+| CVE-2018-10545 | medium | Known vulnerabilities | FPM workers can bypass OPcache access controls |
+| CVE-2018-19518 | high | Known vulnerabilities | imap_open() runs shell commands |
+| CVE-2019-11043 | critical | Known vulnerabilities | PHP-FPM env_path_info underflow (remote code execution) |
+| CVE-2019-11048 | medium | Known vulnerabilities | Upload temp files left behind by long names |
+| CVE-2020-7062 | medium | Known vulnerabilities | Crash in session upload progress |
+| CVE-2020-7070 | medium | Known vulnerabilities | Encoded cookie names allow __Host- spoofing |
+| CVE-2021-21703 | high | Known vulnerabilities | PHP-FPM local privilege escalation to root |
+| CVE-2022-31629 | medium | Known vulnerabilities | __Host- cookie names can be spoofed |
+| CVE-2023-0662 | medium | Known vulnerabilities | Denial of service through multipart request bodies |
+| CVE-2024-11234 | medium | Known vulnerabilities | CRLF injection through stream proxy configuration |
+| CVE-2024-1874 | high | Known vulnerabilities | Command injection through proc_open() on Windows |
+| CVE-2024-2756 | medium | Known vulnerabilities | __Host-/__Secure- cookie prefix bypass |
+| CVE-2024-4577 | critical | Known vulnerabilities | php-cgi argument injection on Windows |
+| CVE-2024-5585 | high | Known vulnerabilities | Bypass of the CVE-2024-1874 fix |
+| CVE-2024-8925 | medium | Known vulnerabilities | Erroneous parsing of multipart form data |
+| CVE-2024-8926 | critical | Known vulnerabilities | Bypass of the CVE-2024-4577 fix |
+| CVE-2024-8927 | high | Known vulnerabilities | cgi.force_redirect bypass |
+| CVE-2024-9026 | low | Known vulnerabilities | PHP-FPM worker output can alter log entries |
+| CVE-2025-1217 | low | Known vulnerabilities | HTTP wrapper mishandles folded headers |
+| CVE-2025-1219 | low | Known vulnerabilities | libxml uses the wrong content type after redirects |
+| CVE-2025-1734 | low | Known vulnerabilities | HTTP wrapper accepts headers without a colon |
+| CVE-2025-1736 | medium | Known vulnerabilities | HTTP wrapper header check may omit headers |
+| CVE-2025-1861 | medium | Known vulnerabilities | HTTP wrapper truncates redirect locations |
+| CVE-2026-6735 | medium | Known vulnerabilities | XSS in the PHP-FPM status page |
+| CVE-2026-91766 | high | Known vulnerabilities | HTTP wrapper leaks credentials across origins on redirect |
+| CVE-2026-91768 | high | Known vulnerabilities | IPv6 bypass of listen.allowed_clients |
+| CVE-2026-93682 | medium | Known vulnerabilities | HTTP wrapper out-of-bounds read on empty redirect |
 | DB-001 | medium | Database and credentials | MySQL LOAD DATA LOCAL enabled |
 | DB-002 | medium | Database and credentials | Credentials stored in PHP configuration |
 | DB-003 | low | Database and credentials | SQLite safety features relaxed |
@@ -177,6 +209,8 @@ its source, a CWE where applicable and a recommendation.
 | SESS-012 | info | Session security | Default session cookie name |
 | SESS-013 | info | Session security | Persistent session cookie |
 | SESS-014 | info | Session security | Session cookie shared with other hosts |
+| VULN-001 | high | PHP version support | PHP branch without security support |
+| VULN-002 | info | PHP version support | Known vulnerabilities depend on the exact PHP version |
 
 Regenerate this table with `php-ini-audit rules --format markdown`.
 

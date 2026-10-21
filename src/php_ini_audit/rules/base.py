@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, FrozenSet, Iterable, Optional, Sequence, Tuple, Union
 
 from ..model import Confidence, Directive, Location, Setting, Severity, SourceKind
 
@@ -27,6 +27,8 @@ CATEGORIES = {
     "CFG": "Configuration hygiene",
     "FPM": "PHP-FPM pools",
     "HTA": "Apache .htaccess",
+    "VULN": "PHP version support",
+    "CVE": "Known vulnerabilities",
 }
 
 WEB_SAPIS: FrozenSet[str] = frozenset({"fpm", "cgi", "apache2", "litespeed", "unknown"})
@@ -101,7 +103,10 @@ class Context:
     config: object
     sapi: str
     profile: str
-    php_version: Optional[Tuple[int, int]]
+    php_version: Optional[Tuple[int, ...]]
+    version_source: Optional[str] = None
+    version_backports: bool = False
+    platform: str = "posix"
     paths: object = None
     pool: object = None
     pools: Sequence[object] = ()
@@ -135,7 +140,7 @@ class FileContext:
 
     file: object
     profile: str
-    php_version: Optional[Tuple[int, int]]
+    php_version: Optional[Tuple[int, ...]]
     paths: object = None
 
     @property
@@ -155,9 +160,3 @@ def names(items: Sequence[str]) -> str:
     return ", ".join(items)
 
 
-def evidence_list(*items: Evidence) -> Tuple[Evidence, ...]:
-    return tuple(items)
-
-
-def flatten(groups: Iterable[Iterable[Hit]]) -> List[Hit]:
-    return [hit for group in groups for hit in group]

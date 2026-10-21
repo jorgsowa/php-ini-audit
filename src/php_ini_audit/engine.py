@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -14,13 +16,14 @@ from .paths import PathInspector
 from .rules import REGISTRY, Context, FileContext, Rule
 
 PROFILES = ("production", "development")
+_WINDOWS_PATH = re.compile(r"^[A-Za-z]:[\\/]")
 
 
 @dataclass
 class Options:
     profile: str = "production"
     sapi: Optional[str] = None
-    php_version: Optional[Tuple[int, int]] = None
+    php_version: Optional[Tuple[int, ...]] = None
     path_checks: bool = True
     webroots: Sequence[str] = ()
     min_severity: Severity = Severity.INFO
@@ -32,9 +35,12 @@ class Options:
 class Target:
     label: str
     sapi: str
-    php_version: Optional[Tuple[int, int]]
+    php_version: Optional[Tuple[int, ...]]
     files: List[str]
     config: EffectiveConfig
+    version_source: Optional[str] = None
+    version_backports: bool = False
+    platform: str = "posix"
     layers: List[Directive] = field(default_factory=list)
     overlay: Optional[str] = None
     pool: Optional[FpmPool] = None
@@ -53,6 +59,7 @@ class Target:
             "overlay": self.overlay,
             "sapi": self.sapi,
             "php_version": ".".join(map(str, self.php_version)) if self.php_version else None,
+            "php_version_source": self.version_source,
             "files": self.files,
             "defaults_only": self.defaults_reason is not None,
         }
@@ -84,7 +91,7 @@ class Auditor:
         self.options = options
         self.paths = PathInspector(fs, options.webroots) if options.path_checks else None
         self.parsed: Dict[str, object] = {}
-        self.file_versions: Dict[str, Optional[Tuple[int, int]]] = {}
+        self.file_versions: Dict[str, Optional[Tuple[int, ...]]] = {}
         self.warnings: List[str] = []
 
     def _load(self, path: str, parser, *args):
@@ -100,7 +107,7 @@ class Auditor:
         self.parsed[path] = parsed
         return parsed
 
-    def _remember_version(self, path: str, version: Optional[Tuple[int, int]]) -> None:
+    def _remember_version(self, path: str, version: Optional[Tuple[int, ...]]) -> None:
         if self.file_versions.get(path) is None:
             self.file_versions[path] = version
 
@@ -138,7 +145,12 @@ class Auditor:
         return targets
 
     def _installation_targets(self, installation: Installation) -> List[Target]:
-        version = self.options.php_version or installation.php_version
+        if self.options.php_version:
+            version, source, backports = self.options.php_version, "--php-version", False
+        else:
+            version = installation.php_version
+            source = installation.version_source or ("path" if version else None)
+            backports = installation.version_backports
         layers: List[Directive] = []
         files: List[str] = []
         ini_files: List[IniFile] = []
@@ -165,6 +177,9 @@ class Auditor:
             php_version=version,
             files=files,
             config=EffectiveConfig(layers),
+            version_source=source,
+            version_backports=backports,
+            platform=self._platform([installation.ini or ""] + installation.scan_files + installation.fpm_files, layers),
             layers=layers,
             pools=pools,
             defaults_reason=installation.defaults_reason,
@@ -185,6 +200,18 @@ class Auditor:
             targets.append(pool_target)
         return targets
 
+    def _platform(self, paths: Sequence[str], layers: Sequence[Directive]) -> str:
+        if any(_WINDOWS_PATH.match(p) for p in paths):
+            return "windows"
+        for directive in layers:
+            if directive.name in ("extension", "zend_extension", "extension_dir") and (
+                _WINDOWS_PATH.match(directive.value) or directive.value.lower().endswith(".dll")
+            ):
+                return "windows"
+        if self.fs.root is None and os.name == "nt":
+            return "windows"
+        return "posix"
+
     def _overlay(
         self, base: Target, overlay: Sequence[Directive], kind: OverlayKind, label: str, source: Optional[str] = None
     ) -> Target:
@@ -195,6 +222,9 @@ class Auditor:
             php_version=base.php_version,
             files=base.files + sorted(sources - set(base.files)),
             config=EffectiveConfig(base.layers, overlay, kind),
+            version_source=base.version_source,
+            version_backports=base.version_backports,
+            platform=base.platform,
             layers=base.layers,
             overlay=label if kind is OverlayKind.FPM_POOL else f"{kind}: {label}",
             pools=base.pools,
@@ -212,6 +242,9 @@ class Auditor:
                 sapi=target.sapi,
                 profile=self.options.profile,
                 php_version=target.php_version,
+                version_source=target.version_source,
+                version_backports=target.version_backports,
+                platform=target.platform,
                 paths=self.paths,
                 pool=target.pool,
                 pools=target.pools,

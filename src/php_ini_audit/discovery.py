@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set, Tuple
 
 from .fsutil import FileSystem
+from .versions import VersionFinder, pick
 
 # Locations of php.ini across distributions, packagers and bundles.
 POSIX_INI_PATTERNS = (
@@ -74,7 +75,9 @@ class Installation:
     scan_dirs: List[str] = field(default_factory=list)
     fpm_files: List[str] = field(default_factory=list)
     sapi: str = "unknown"
-    php_version: Optional[Tuple[int, int]] = None
+    php_version: Optional[Tuple[int, ...]] = None
+    version_source: Optional[str] = None
+    version_backports: bool = False
     defaults_reason: Optional[str] = None
 
 
@@ -84,6 +87,17 @@ class Discovery:
     user_inis: List[str] = field(default_factory=list)
     htaccess: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+
+    def resolve_versions(self, fs: FileSystem) -> None:
+        """Upgrade path-derived MAJOR.MINOR to an exact version where the system records one."""
+        evidence = VersionFinder(fs).collect()
+        for installation in self.installations:
+            branch = installation.php_version[:2] if installation.php_version else None
+            chosen = pick(evidence, branch, installation.ini or (installation.scan_dirs or [None])[0])
+            if chosen is not None:
+                installation.php_version = chosen.version
+                installation.version_source = chosen.source
+                installation.version_backports = chosen.backports
 
 
 def detect_sapi(path: str) -> str:

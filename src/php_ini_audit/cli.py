@@ -9,13 +9,13 @@ import sys
 from typing import List, Optional
 
 from . import __version__
-from .directives import version_tuple
 from .discovery import Discoverer, Discovery
 from .engine import PROFILES, Auditor, Options
 from .fsutil import FileSystem
 from .model import Severity
 from .report import render_json, render_markdown, render_rule, render_rules, render_sarif, render_text
 from .rules import REGISTRY
+from .versions import format_version, parse_version
 
 COMMANDS = ("scan", "rules", "discover")
 SAPIS = ("cli", "fpm", "apache2", "cgi", "litespeed", "embed", "unknown")
@@ -30,9 +30,9 @@ def _severity(text: str) -> Severity:
 
 
 def _version(text: str):
-    if not re.fullmatch(r"\d+(\.\d+)?", text):
-        raise argparse.ArgumentTypeError("expected MAJOR.MINOR, e.g. 8.3")
-    return version_tuple(text)
+    if not re.fullmatch(r"\d+\.\d+(\.\d+)?", text):
+        raise argparse.ArgumentTypeError("expected MAJOR.MINOR or MAJOR.MINOR.PATCH, e.g. 8.3.12")
+    return parse_version(text)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -60,7 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
     scan.add_argument("--profile", choices=PROFILES, default="production",
                       help="severity profile (default production)")
     scan.add_argument("--sapi", choices=SAPIS, help="override the SAPI inferred from paths")
-    scan.add_argument("--php-version", type=_version, help="override the PHP version inferred from paths")
+    scan.add_argument("--php-version", type=_version, help="exact PHP version (X.Y or X.Y.Z); otherwise read from paths, headers and package databases")
     scan.add_argument("--path-checks", choices=("auto", "on", "off"), default="auto",
                       help="inspect permissions of referenced paths; auto = on for system/--root scans")
     scan.add_argument("--min-severity", type=_severity, default=Severity.INFO, help="hide findings below this")
@@ -110,6 +110,8 @@ def _discover(args, fs: FileSystem) -> Discovery:
         discovery.installations.extend(extra.installations)
     if not explicit:
         discovery = discoverer.system()
+    if not explicit or fs.root:
+        discovery.resolve_versions(fs)
     for webroot in args.webroot:
         found = discoverer.paths([display(webroot)], max_depth=args.max_depth)
         discovery.user_inis.extend(p for p in found.user_inis if p not in discovery.user_inis)
@@ -133,7 +135,9 @@ def _cmd_rules(args) -> int:
 def _cmd_discover(args, fs: FileSystem) -> int:
     discovery = _discover(args, fs)
     for installation in discovery.installations:
-        version = ".".join(map(str, installation.php_version)) if installation.php_version else "unknown"
+        version = format_version(installation.php_version)
+        if installation.version_source:
+            version += f" from {installation.version_source}"
         print(f"{installation.label}  [sapi {installation.sapi}, php {version}]")
         if installation.defaults_reason:
             print(f"  ! {installation.defaults_reason}")

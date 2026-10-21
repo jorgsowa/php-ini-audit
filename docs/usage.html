@@ -58,7 +58,7 @@ php-ini-audit --root rootfs</code></pre>
       <tbody>
         <tr><td><code>--profile production|development</code></td><td>Default <code>production</code>. Development lowers disclosure findings (e.g. <code>display_errors</code> becomes info) and skips production-only rules.</td></tr>
         <tr><td><code>--sapi NAME</code></td><td><code>cli</code>, <code>fpm</code>, <code>apache2</code>, <code>cgi</code>, <code>litespeed</code>, <code>embed</code> or <code>unknown</code>. Normally inferred from the path; <code>unknown</code> is treated as web-facing.</td></tr>
-        <tr><td><code>--php-version X.Y</code></td><td>Normally inferred from the path (<code>/etc/php/8.2/</code>, <code>php82</code>, <code>ea-php81</code>). Affects obsolete and deprecated directive checks.</td></tr>
+        <tr><td><code>--php-version X.Y[.Z]</code></td><td>Exact version for <a href="how-it-works.html#versions">known-vulnerability checks</a>. Otherwise it is read from <code>php_version.h</code> or package databases on host and <code>--root</code> scans, or the branch is inferred from the path (<code>/etc/php/8.2/</code>, <code>php82</code>, <code>ea-php81</code>).</td></tr>
         <tr><td><code>--path-checks auto|on|off</code></td><td>Inspect permissions of paths named in the config. <code>auto</code> enables it for host and <code>--root</code> scans, not for copied files whose paths would point at the wrong machine.</td></tr>
         <tr><td><code>--min-severity LEVEL</code></td><td>Hide findings below <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code> or <code>info</code>.</td></tr>
         <tr><td><code>--only ID|CATEGORY</code></td><td>Run only these rules; repeatable (<code>--only SESS --only EXEC-001</code>).</td></tr>

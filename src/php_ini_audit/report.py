@@ -10,6 +10,7 @@ from . import __version__
 from .engine import AuditResult
 from .model import Finding, Severity
 from .rules import REGISTRY
+from .versions import format_version
 
 _COLORS = {
     Severity.CRITICAL: "\033[1;97;41m",
@@ -85,7 +86,9 @@ def render_text(result: AuditResult, profile: str, color: bool = False) -> str:
         lines.append("")
         header = f"== {name}"
         if target is not None:
-            version = ".".join(map(str, target.php_version)) if target.php_version else "unknown"
+            version = format_version(target.php_version)
+            if target.version_source and target.version_source != "path":
+                version += f" from {target.version_source}"
             header += f"  [sapi {target.sapi}, php {version}]"
         else:
             header += "  [file checks]"
@@ -99,7 +102,7 @@ def render_text(result: AuditResult, profile: str, color: bool = False) -> str:
             lines.append("   no findings")
         for finding in findings:
             label = paint(finding.severity, f"{str(finding.severity).upper():8}")
-            lines.append(f"  {label} {finding.rule_id:9} {finding.title}  (confidence {finding.confidence})")
+            lines.append(f"  {label} {finding.rule_id:14} {finding.title}  (confidence {finding.confidence})")
             lines.append(f"           {finding.message}")
             where = _where(finding)
             if where:
@@ -251,7 +254,7 @@ def render_rules(fmt: str) -> str:
         lines = ["| Rule | Severity | Category | Title |", "| --- | --- | --- | --- |"]
         lines += [f"| {r.id} | {r.severity} | {r.category_name} | {_md_escape(r.title)} |" for r in rules]
         return "\n".join(lines) + "\n"
-    return "".join(f"{r.id:9} {str(r.severity):8} {r.category_name:30} {r.title}\n" for r in rules)
+    return "".join(f"{r.id:14} {str(r.severity):8} {r.category_name:30} {r.title}\n" for r in rules)
 
 
 def render_rule(rule_id: str) -> str:

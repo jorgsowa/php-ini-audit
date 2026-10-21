@@ -23,7 +23,7 @@ class RegistryTest(unittest.TestCase):
         for rule in REGISTRY.values():
             self.assertTrue(rule.description and rule.recommendation, rule.id)
             self.assertIn(rule.scope, ("config", "file", "pool"), rule.id)
-            self.assertRegex(rule.id, r"^[A-Z]+-\d{3}$")
+            self.assertRegex(rule.id, r"^([A-Z]+-\d{3}|CVE-\d{4}-\d{4,})$")
 
 
 class DefaultsTest(unittest.TestCase):
