@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usage — php-ini-audit</title>
+  <meta name="description" content="Installing php-ini-audit, command-line reference, output formats, exit codes and CI integration.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">php-ini-<span>audit</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Overview</a>
+      <a href="usage.html" aria-current="page">Usage</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="rules.html">Rules</a>
+      <a href="https://github.com/jorgsowa/php-ini-audit">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Usage</h1>
+  <p class="lead">Install, point it at a host, a directory, an image or a single file, and choose the report format.</p>
+
+  <h2 id="install">Install <a class="anchor" href="#install">#</a></h2>
+  <p>Python 3.9 or newer, standard library only.</p>
+<pre><code>pip install git+https://github.com/jorgsowa/php-ini-audit
+<span class="c"># or, from a checkout, without installing:</span>
+PYTHONPATH=src python3 -m php_ini_audit --help</code></pre>
+
+  <h2 id="targets">Choosing what to audit <a class="anchor" href="#targets">#</a></h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Command</th><th>What is read</th></tr></thead>
+      <tbody>
+        <tr><td><code>php-ini-audit</code></td><td>Every installation found in the <a href="how-it-works.html#discovery">known locations</a> on this host.</td></tr>
+        <tr><td><code>php-ini-audit /etc/php/8.3/fpm/php.ini</code></td><td>That php.ini plus the sibling <code>conf.d/</code> or <code>php.d/</code> and FPM pools.</td></tr>
+        <tr><td><code>php-ini-audit ./backup/</code></td><td>Walks the directory: every php.ini, loose <code>*.ini</code>, pool <code>*.conf</code>, <code>.user.ini</code> and <code>.htaccess</code>.</td></tr>
+        <tr><td><code>php-ini-audit --root /mnt/rootfs</code></td><td>Host discovery inside an extracted image, chroot or mounted disk. Symlinks stay inside the root.</td></tr>
+        <tr><td><code>php-ini-audit --webroot /var/www/html</code></td><td>Adds <code>.user.ini</code>/<code>.htaccess</code> below the document root as overlays, and marks paths inside it as web-served.</td></tr>
+        <tr><td><code>php-ini-audit --ini app.ini --scan-dir conf.d --pool www.conf</code></td><td>An explicit installation, like <code>php -c app.ini</code> with <code>PHP_INI_SCAN_DIR=conf.d</code>.</td></tr>
+        <tr><td><code>php-ini-audit discover</code></td><td>Lists the files that would be read, without auditing.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Exporting a container image for <code>--root</code> needs no running container:</p>
+<pre><code>mkdir rootfs
+docker export "$(docker create php:8.3-fpm)" | tar -x -C rootfs
+php-ini-audit --root rootfs</code></pre>
+
+  <h2 id="options">Scan options <a class="anchor" href="#options">#</a></h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Option</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>--profile production|development</code></td><td>Default <code>production</code>. Development lowers disclosure findings (e.g. <code>display_errors</code> becomes info) and skips production-only rules.</td></tr>
+        <tr><td><code>--sapi NAME</code></td><td><code>cli</code>, <code>fpm</code>, <code>apache2</code>, <code>cgi</code>, <code>litespeed</code>, <code>embed</code> or <code>unknown</code>. Normally inferred from the path; <code>unknown</code> is treated as web-facing.</td></tr>
+        <tr><td><code>--php-version X.Y</code></td><td>Normally inferred from the path (<code>/etc/php/8.2/</code>, <code>php82</code>, <code>ea-php81</code>). Affects obsolete and deprecated directive checks.</td></tr>
+        <tr><td><code>--path-checks auto|on|off</code></td><td>Inspect permissions of paths named in the config. <code>auto</code> enables it for host and <code>--root</code> scans, not for copied files whose paths would point at the wrong machine.</td></tr>
+        <tr><td><code>--min-severity LEVEL</code></td><td>Hide findings below <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code> or <code>info</code>.</td></tr>
+        <tr><td><code>--only ID|CATEGORY</code></td><td>Run only these rules; repeatable (<code>--only SESS --only EXEC-001</code>).</td></tr>
+        <tr><td><code>--skip ID|CATEGORY</code></td><td>Skip rules; repeatable.</td></tr>
+        <tr><td><code>--format text|json|sarif|markdown</code></td><td>Report format; text is colored on a terminal unless <code>--no-color</code> or <code>NO_COLOR</code> is set.</td></tr>
+        <tr><td><code>-o, --output FILE</code></td><td>Write the report to a file.</td></tr>
+        <tr><td><code>--fail-on LEVEL</code></td><td>Exit with status 1 when any finding is at or above LEVEL.</td></tr>
+        <tr><td><code>--max-depth N</code></td><td>Directory walk depth, default 12.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="output">Reading the output <a class="anchor" href="#output">#</a></h2>
+  <p>Each finding has:</p>
+  <ul>
+    <li><strong>Severity</strong>: <span class="sev sev-critical">critical</span> <span class="sev sev-high">high</span> <span class="sev sev-medium">medium</span> <span class="sev sev-low">low</span> <span class="sev sev-info">info</span>. A rule has a default severity, but an individual finding can be raised or lowered by context. For example, <code>allow_url_include</code> is critical, and drops to high while <code>allow_url_fopen</code> is Off.</li>
+    <li><strong>Confidence</strong>: how sure the static view can be. It is low for heuristics (web-root detection by directory name) and for values that contain <code>${ENV}</code> references.</li>
+    <li><strong>Location</strong>: the file and line of the effective value, or <code>built-in default</code>.</li>
+    <li><strong>Target</strong>: the effective configuration it belongs to, such as <code>/etc/php/8.3/fpm/php.ini + pool [www] (…)</code>.</li>
+  </ul>
+  <p>Findings on an overlay only cover what the overlay changes, so php.ini problems are not repeated for every pool.</p>
+
+  <h2 id="formats">Formats <a class="anchor" href="#formats">#</a></h2>
+  <h3 id="json">JSON</h3>
+<pre><code>{
+  "tool": {"name": "php-ini-audit", "version": "0.1.0"},
+  "profile": "production",
+  "summary": {"by_severity": {"critical": 4, "high": 4, …}, "by_category": {…}, "by_target": {…}},
+  "targets": [{"name": "/etc/php/8.2/fpm/php.ini", "sapi": "fpm", "php_version": "8.2", "files": […]}],
+  "findings": [{
+    "rule_id": "EXEC-001", "severity": "critical", "confidence": "high",
+    "message": "allow_url_include is enabled", "directive": "allow_url_include", "value": "1",
+    "file": "/etc/php/8.2/fpm/php.ini", "line": 22, "from_default": false,
+    "target": "/etc/php/8.2/fpm/php.ini", "cwe": "CWE-98", "recommendation": "…"
+  }]
+}</code></pre>
+  <h3 id="sarif">SARIF</h3>
+  <p>SARIF 2.1.0 with <code>security-severity</code> properties. GitHub code scanning reads it directly. Critical and high map to <code>error</code>, medium to <code>warning</code>, and low and info to <code>note</code>.</p>
+  <h3 id="markdown">Markdown</h3>
+  <p>Severity summary plus one table per severity, ready for a pull-request comment or ticket.</p>
+
+  <h2 id="exit-codes">Exit codes <a class="anchor" href="#exit-codes">#</a></h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>0</code></td><td>Audit completed. Findings do not change the exit code unless <code>--fail-on</code> is given.</td></tr>
+        <tr><td><code>1</code></td><td>A finding at or above the <code>--fail-on</code> threshold exists.</td></tr>
+        <tr><td><code>2</code></td><td>Usage error: unknown rule or category, invalid <code>--root</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="ci">CI: GitHub code scanning <a class="anchor" href="#ci">#</a></h2>
+<pre><code>name: php-config-audit
+on: [push, pull_request]
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install git+https://github.com/jorgsowa/php-ini-audit
+      - run: php-ini-audit docker/php/ --format sarif -o php-ini.sarif --fail-on high
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: {sarif_file: php-ini.sarif}</code></pre>
+
+  <h2 id="rules-cli">Rule catalogue from the CLI <a class="anchor" href="#rules-cli">#</a></h2>
+<pre><code>php-ini-audit rules                     <span class="c"># id, severity, category, title</span>
+php-ini-audit rules SESS-001            <span class="c"># full explanation of one rule</span>
+php-ini-audit rules --format json       <span class="c"># machine-readable catalogue</span></code></pre>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">php-ini-audit <!-- generated:version -->0.1.0<!-- /generated:version --> · <a href="https://github.com/jorgsowa/php-ini-audit">Source on GitHub</a></div>
+</footer>
+</body>
+</html>

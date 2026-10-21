@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How it works — php-ini-audit</title>
+  <meta name="description" content="How php-ini-audit discovers PHP configuration, parses it like PHP, layers files and overlays, applies built-in defaults, and stays read-only.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">php-ini-<span>audit</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Overview</a>
+      <a href="usage.html">Usage</a>
+      <a href="how-it-works.html" aria-current="page">How it works</a>
+      <a href="rules.html">Rules</a>
+      <a href="https://github.com/jorgsowa/php-ini-audit">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>How it works</h1>
+  <p class="lead">Four steps: find the files, parse them as PHP would, layer them into effective configurations, then evaluate every rule against each one.</p>
+
+  <h2 id="safety">Safety model <a class="anchor" href="#safety">#</a></h2>
+  <ul>
+    <li><strong>No execution.</strong> The tool never runs <code>php</code>, a shell or any other process, never calls <code>eval</code>, and never opens a network connection. <code>tests/test_safety.py</code> walks the source syntax tree and fails if such a call or import appears.</li>
+    <li><strong>Read-only file access.</strong> Only regular files are opened. FIFOs, devices and sockets are refused so that a planted <code>php.ini</code> FIFO cannot hang the scan. Files over 4&nbsp;MiB or containing binary data are skipped with a warning.</li>
+    <li><strong>Confined roots.</strong> With <code>--root</code>, every symlink is resolved component by component inside the root. An absolute link such as <code>php.ini → /etc/shadow</code> resolves to <code>&lt;root&gt;/etc/shadow</code>, never to the host file.</li>
+    <li><strong>Metadata only for paths.</strong> Paths referenced by settings are inspected with <code>stat()</code>; their contents are never read.</li>
+    <li><strong>No environment expansion.</strong> <code>${VAR}</code> in a value is kept literally and reported (<a href="rules.html#CFG-007">CFG-007</a>). The scanner's own environment is not PHP's.</li>
+  </ul>
+
+  <h2 id="discovery">1. Discovery <a class="anchor" href="#discovery">#</a></h2>
+  <p>Without arguments, these locations are searched (inside <code>--root</code> when given):</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Platform</th><th>php.ini</th><th>Scan dir / pools</th></tr></thead>
+      <tbody>
+        <tr><td>Debian, Ubuntu</td><td><code>/etc/php/*/{cli,fpm,apache2,cgi}/php.ini</code></td><td><code>conf.d/</code>, <code>pool.d/</code></td></tr>
+        <tr><td>RHEL, Fedora, Remi</td><td><code>/etc/php.ini</code>, <code>/etc/opt/remi/php*/php.ini</code></td><td><code>/etc/php.d/</code>, <code>/etc/php-fpm.d/</code></td></tr>
+        <tr><td>Alpine, SUSE, Arch</td><td><code>/etc/php*/php.ini</code>, <code>/etc/php*/*/php.ini</code>, <code>/etc/php/php.ini</code></td><td><code>conf.d/</code>, <code>php-fpm.d/</code></td></tr>
+        <tr><td>Official Docker images</td><td><code>/usr/local/etc/php/php.ini</code></td><td><code>conf.d/</code>, <code>/usr/local/etc/php-fpm.d/</code></td></tr>
+        <tr><td>FreeBSD</td><td><code>/usr/local/etc/php.ini</code></td><td><code>/usr/local/etc/php/</code></td></tr>
+        <tr><td>Homebrew</td><td><code>/opt/homebrew/etc/php/*/php.ini</code>, <code>/usr/local/etc/php/*/php.ini</code></td><td><code>conf.d/</code>, <code>php-fpm.d/</code></td></tr>
+        <tr><td>cPanel, Plesk, CloudLinux</td><td><code>/opt/cpanel/ea-php*/root/etc/</code>, <code>/opt/plesk/php/*/etc/</code>, <code>/opt/alt/php*/etc/</code></td><td><code>php.d/</code></td></tr>
+        <tr><td>Bundles</td><td>XAMPP, MAMP, Bitnami, Zend Server, <code>/usr/local/lib/php.ini</code></td><td>sibling <code>conf.d/</code></td></tr>
+        <tr><td>Windows</td><td><code>C:\php</code>, XAMPP, WAMP, Laragon, <code>C:\Program Files\PHP\*</code></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The SAPI and PHP version come from the path, e.g. <code>/etc/php/8.2/fpm/</code> is FPM on 8.2. A PHP directory that has <code>php.ini-production</code> or a <code>conf.d/</code> but no <code>php.ini</code> is audited as running on built-in defaults (<a href="rules.html#CFG-006">CFG-006</a>). That is the layout of the official Docker images.</p>
+
+  <h2 id="parsing">2. Parsing like PHP <a class="anchor" href="#parsing">#</a></h2>
+  <ul>
+    <li><code>;</code> starts a comment, including after an unquoted value. <code>#</code> is not a comment since PHP 7 and is reported.</li>
+    <li>Unquoted <code>On/Yes/True</code> become <code>1</code>; <code>Off/No/False/None/Null</code> become empty. That is why <code>session.cookie_samesite = None</code> unquoted actually means "not set".</li>
+    <li>Double- and single-quoted values, concatenation and multi-line quoted values follow the INI scanner.</li>
+    <li><code>error_reporting</code> expressions such as <code>E_ALL &amp; ~E_DEPRECATED</code> are evaluated by a small parser with PHP's operator rules, never by <code>eval</code>.</li>
+    <li>Quantities (<code>128M</code>, <code>2G</code>, <code>0x10</code>) and booleans are read with the semantics of <code>zend_ini_parse_quantity()</code> and <code>zend_ini_parse_bool()</code>.</li>
+    <li>Directive names are case-sensitive; <code>Display_Errors</code> is ignored by PHP and reported as a likely typo.</li>
+  </ul>
+
+  <h2 id="layering">3. Layering <a class="anchor" href="#layering">#</a></h2>
+  <p>A <em>base configuration</em> is built in PHP's order, with the last assignment winning:</p>
+  <ol>
+    <li>PHP's compiled-in defaults</li>
+    <li><code>php.ini</code></li>
+    <li>scan-directory <code>*.ini</code> files in alphabetical order</li>
+  </ol>
+  <p>Each of these is then evaluated as a separate <em>overlay</em> on top of its base:</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Overlay</th><th>Can change</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>PHP-FPM pool</td><td>anything</td><td><code>php_admin_value[disable_functions]</code> and <code>disable_classes</code> append to php.ini, as in PHP-FPM. Pool settings (<code>listen</code>, <code>user</code>, <code>security.limit_extensions</code>…) feed the FPM rules.</td></tr>
+        <tr><td><code>[PATH=…]</code> / <code>[HOST=…]</code> sections</td><td>anything</td><td>Applied only to matching CGI/FastCGI requests.</td></tr>
+        <tr><td><code>.user.ini</code></td><td><code>PHP_INI_PERDIR</code>, <code>PHP_INI_ALL</code></td><td>Attached to FPM/CGI bases.</td></tr>
+        <tr><td><code>.htaccess</code></td><td><code>PHP_INI_PERDIR</code>, <code>PHP_INI_ALL</code></td><td>Attached to Apache bases; <code>php_admin_*</code> is a configuration error there.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>An overlay that tries to set a <code>PHP_INI_SYSTEM</code> directive, such as <code>disable_functions</code> or <code>allow_url_fopen</code> in <code>.user.ini</code>, does not take effect in PHP. The scanner reports it (<a href="rules.html#CFG-005">CFG-005</a>) rather than counting it as protection. Overlay findings only cover what the overlay changes, so base findings are not repeated.</p>
+
+  <h2 id="defaults">Built-in defaults matter <a class="anchor" href="#defaults">#</a></h2>
+  <p>When a directive is not set anywhere, PHP uses its compiled-in default, not the value in <code>php.ini-production</code>. Several of those defaults are insecure:</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Directive</th><th>Built-in default</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td><code>display_errors</code></td><td><code>1</code></td><td><a href="rules.html#ERR-001">ERR-001</a></td></tr>
+        <tr><td><code>register_argc_argv</code></td><td><code>1</code></td><td><a href="rules.html#EXEC-011">EXEC-011</a></td></tr>
+        <tr><td><code>expose_php</code></td><td><code>1</code></td><td><a href="rules.html#ERR-004">ERR-004</a></td></tr>
+        <tr><td><code>enable_dl</code></td><td><code>1</code></td><td><a href="rules.html#EXEC-008">EXEC-008</a></td></tr>
+        <tr><td><code>session.use_strict_mode</code></td><td><code>0</code></td><td><a href="rules.html#SESS-001">SESS-001</a></td></tr>
+        <tr><td><code>session.cookie_httponly</code></td><td><code>0</code></td><td><a href="rules.html#SESS-005">SESS-005</a></td></tr>
+        <tr><td><code>cgi.fix_pathinfo</code></td><td><code>1</code></td><td><a href="rules.html#CGI-002">CGI-002</a></td></tr>
+        <tr><td><code>disable_functions</code>, <code>open_basedir</code></td><td>empty</td><td><a href="rules.html#EXEC-005">EXEC-005</a>, <a href="rules.html#FS-001">FS-001</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Findings caused by a default say <code>at built-in default</code> and have <code>"from_default": true</code> in JSON.</p>
+
+  <h2 id="evaluation">4. Rule evaluation <a class="anchor" href="#evaluation">#</a></h2>
+  <ul>
+    <li><strong>Config rules</strong> see one effective configuration. Most security checks are config rules.</li>
+    <li><strong>Pool rules</strong> see an FPM pool's own settings (<code>listen</code>, <code>user</code>, <code>env[…]</code>).</li>
+    <li><strong>File rules</strong> run once per file, wherever it is layered: syntax problems, typos, obsolete or deprecated directives, file permissions, <code>.htaccess</code> handlers.</li>
+  </ul>
+  <p>Rules declare the SAPIs they apply to. Web-only checks such as session cookies or <code>open_basedir</code> are skipped for <code>cli</code>, and an unknown SAPI is treated as web-facing. The <code>development</code> profile caps disclosure rules at info and skips production-only rules.</p>
+
+  <h2 id="paths">Path checks <a class="anchor" href="#paths">#</a></h2>
+  <p>About 25 directives name paths: <code>extension_dir</code>, <code>session.save_path</code>, <code>upload_tmp_dir</code>, <code>error_log</code>, <code>mail.log</code>, <code>opcache.file_cache</code>, <code>openssl.cafile</code>, <code>curl.cainfo</code>, <code>sendmail_path</code>, absolute <code>extension=</code> paths and others. Each gets a severity for two situations:</p>
+  <ul>
+    <li><strong>World-writable</strong> (<a href="rules.html#FS-005">FS-005</a>): the path, or the directory where it can be created or replaced, is writable by every local user. For example, a world-writable <code>extension_dir</code> is critical.</li>
+    <li><strong>Web-served</strong> (<a href="rules.html#FS-006">FS-006</a>): the path is under a <code>--webroot</code>. Without one, a guess from directory names such as <code>public_html</code> or <code>htdocs</code> is used, with low confidence.</li>
+  </ul>
+  <p>Configuration files themselves are checked as well (<a href="rules.html#FS-011">FS-011</a>).</p>
+
+  <h2 id="limitations">Limitations <a class="anchor" href="#limitations">#</a></h2>
+  <ul>
+    <li>A static audit sees files only. It cannot see <code>php -d</code> flags, <code>PHP_INI_SCAN_DIR</code> or <code>PHP_VALUE</code> set by a web server, <code>ini_set()</code> at runtime, or which extensions are compiled in.</li>
+    <li><code>php_admin_value</code> in Apache vhost files is not parsed (<code>.htaccess</code> is).</li>
+    <li>The built-in defaults table follows PHP 8. Paths compiled into a particular build (<code>extension_dir</code>, <code>include_path</code>) may differ.</li>
+  </ul>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">php-ini-audit <!-- generated:version -->0.1.0<!-- /generated:version --> · <a href="https://github.com/jorgsowa/php-ini-audit">Source on GitHub</a></div>
+</footer>
+</body>
+</html>

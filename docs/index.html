@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>php-ini-audit — static security audit of PHP configuration</title>
+  <meta name="description" content="Read-only security scanner for php.ini, conf.d, PHP-FPM pools, .user.ini and .htaccess. Reports every insecure setting with severity, confidence and source line. Never executes anything.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">php-ini-<span>audit</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" aria-current="page">Overview</a>
+      <a href="usage.html">Usage</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="rules.html">Rules</a>
+      <a href="https://github.com/jorgsowa/php-ini-audit">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Find every insecure PHP setting without running PHP</h1>
+    <p class="lead">
+      php-ini-audit reads <code>php.ini</code>, <code>conf.d</code>, PHP-FPM pools, <code>.user.ini</code> and
+      <code>.htaccess</code>, rebuilds the effective configuration the way PHP does, and reports each matching
+      rule with its severity, confidence and the exact file and line it came from.
+    </p>
+    <div class="actions">
+      <a class="button primary" href="usage.html">Get started</a>
+      <a class="button" href="rules.html">Browse <!-- generated:rule-count -->98<!-- /generated:rule-count --> rules</a>
+    </div>
+  </section>
+
+  <h2 id="quick-start">Quick start <a class="anchor" href="#quick-start">#</a></h2>
+<pre><code>pip install git+https://github.com/jorgsowa/php-ini-audit
+php-ini-audit                              <span class="c"># discover and audit this host</span>
+php-ini-audit --root /mnt/rootfs           <span class="c"># audit an extracted container image</span>
+php-ini-audit /etc/php/8.3/fpm/php.ini     <span class="c"># audit one installation</span></code></pre>
+
+  <h2 id="example">What a report looks like <a class="anchor" href="#example">#</a></h2>
+  <p>Findings are grouped per effective configuration: a php.ini with its scan directory, and every overlay on top of it (FPM pools, <code>.user.ini</code>, <code>[PATH=]</code> sections).</p>
+<pre><code>== /etc/php/8.2/fpm/php.ini  [sapi fpm, php 8.2]
+   files: /etc/php/8.2/fpm/php.ini, /etc/php/8.2/fpm/conf.d/20-xdebug.ini, …
+  <span class="sev-critical">CRITICAL</span> EXEC-001  Remote file inclusion enabled  (confidence high)
+           allow_url_include is enabled
+           at /etc/php/8.2/fpm/php.ini:22
+           fix: Set allow_url_include = Off.
+  <span class="sev-high">HIGH    </span> SESS-002  Session IDs accepted outside cookies  (confidence high)
+           session.use_only_cookies is Off
+           at /etc/php/8.2/fpm/php.ini:35
+  <span class="sev-low">LOW     </span> ERR-004   PHP version disclosed in HTTP headers  (confidence high)
+           expose_php is On
+           at built-in default
+
+== /etc/php/8.2/fpm/php.ini + pool [www] (/etc/php/8.2/fpm/pool.d/www.conf)
+  <span class="sev-critical">CRITICAL</span> FPM-001   FastCGI port reachable from the network  (confidence medium)
+           listen = 0.0.0.0:9000 binds every interface without listen.allowed_clients
+           at /etc/php/8.2/fpm/pool.d/www.conf:4</code></pre>
+
+  <h2 id="principles">Design principles <a class="anchor" href="#principles">#</a></h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Never executes anything</h3>
+      <p>No <code>php -i</code>, no subprocesses, no <code>eval</code>, no network. A test fails the build if such a call is added.</p>
+    </div>
+    <div class="card">
+      <h3>Not a pass/fail verdict</h3>
+      <p>Every matching rule is reported, each with its own severity and confidence. One rule can report several problems.</p>
+    </div>
+    <div class="card">
+      <h3>Defaults count</h3>
+      <p>Unset directives are checked against PHP's built-in defaults, which is where Docker images without a php.ini go wrong.</p>
+    </div>
+    <div class="card">
+      <h3>Knows where values come from</h3>
+      <p>Every finding points at the file and line that set the effective value, or says it is a default.</p>
+    </div>
+    <div class="card">
+      <h3>Understands overlays</h3>
+      <p>FPM <code>php_admin_value</code>, <code>.user.ini</code> and <code>.htaccess</code> are layered with PHP's changeability rules, so ignored hardening is reported.</p>
+    </div>
+    <div class="card">
+      <h3>Checks referenced paths</h3>
+      <p>Session, upload, log, extension and CA paths are checked for world-writable permissions and for sitting inside the web root, using <code>stat()</code> only.</p>
+    </div>
+  </div>
+
+  <h2 id="coverage">Coverage <a class="anchor" href="#coverage">#</a></h2>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Prefix</th><th>Category</th><th>Rules</th></tr></thead>
+      <tbody><!-- generated:category-table -->
+<tr><td><a href="rules.html#cat-EXEC"><code>EXEC</code></a></td><td>Code execution</td><td>17</td></tr>
+<tr><td><a href="rules.html#cat-FS"><code>FS</code></a></td><td>Filesystem and paths</td><td>11</td></tr>
+<tr><td><a href="rules.html#cat-ERR"><code>ERR</code></a></td><td>Information disclosure</td><td>11</td></tr>
+<tr><td><a href="rules.html#cat-SESS"><code>SESS</code></a></td><td>Session security</td><td>14</td></tr>
+<tr><td><a href="rules.html#cat-RES"><code>RES</code></a></td><td>Resource limits and DoS</td><td>11</td></tr>
+<tr><td><a href="rules.html#cat-CGI"><code>CGI</code></a></td><td>CGI / FastCGI</td><td>2</td></tr>
+<tr><td><a href="rules.html#cat-EXT"><code>EXT</code></a></td><td>Debug and profiling extensions</td><td>3</td></tr>
+<tr><td><a href="rules.html#cat-OPC"><code>OPC</code></a></td><td>OPcache</td><td>3</td></tr>
+<tr><td><a href="rules.html#cat-DB"><code>DB</code></a></td><td>Database and credentials</td><td>3</td></tr>
+<tr><td><a href="rules.html#cat-ENC"><code>ENC</code></a></td><td>Character encoding</td><td>4</td></tr>
+<tr><td><a href="rules.html#cat-CFG"><code>CFG</code></a></td><td>Configuration hygiene</td><td>10</td></tr>
+<tr><td><a href="rules.html#cat-FPM"><code>FPM</code></a></td><td>PHP-FPM pools</td><td>8</td></tr>
+<tr><td><a href="rules.html#cat-HTA"><code>HTA</code></a></td><td>Apache .htaccess</td><td>1</td></tr>
+<!-- /generated:category-table --></tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">php-ini-audit <!-- generated:version -->0.1.0<!-- /generated:version --> · <a href="https://github.com/jorgsowa/php-ini-audit">Source on GitHub</a></div>
+</footer>
+</body>
+</html>

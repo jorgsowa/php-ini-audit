@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: macos-latest
+            python-version: "3.14"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package
+        run: python -m pip install .
+      - name: Unit and integration tests
+        run: python -m unittest discover -s tests -t . -v
+      - name: CLI smoke test
+        run: |
+          php-ini-audit --version
+          php-ini-audit rules > /dev/null
+          php-ini-audit tests/fixtures/hardened/php.ini --fail-on low
+          php-ini-audit --root tests/fixtures/debian --format sarif -o report.sarif
+          python -c "import json; assert json.load(open('report.sarif'))['runs'][0]['results']"

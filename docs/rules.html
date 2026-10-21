@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rules — php-ini-audit</title>
+  <meta name="description" content="Every php-ini-audit rule with severity, scope, affected directives, CWE and remediation.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">php-ini-<span>audit</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Overview</a>
+      <a href="usage.html">Usage</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="rules.html" aria-current="page">Rules</a>
+      <a href="https://github.com/jorgsowa/php-ini-audit">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Rules</h1>
+  <p class="lead">
+    <!-- generated:rule-count -->98<!-- /generated:rule-count --> rules. The severity shown is the rule's default; an individual finding can be raised or
+    lowered by context, such as the SAPI, the profile or a related setting.
+  </p>
+
+  <div class="filters" role="search">
+    <label class="visually-hidden" for="rule-search">Search rules</label>
+    <input id="rule-search" type="search" placeholder="Search id, title, directive, CWE…" autocomplete="off">
+    <select id="rule-severity" aria-label="Severity"><!-- generated:severity-options --><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="info">Info</option><!-- /generated:severity-options --></select>
+    <select id="rule-category" aria-label="Category"><!-- generated:category-options --><option value="">All categories</option><option value="EXEC">Code execution</option><option value="FS">Filesystem and paths</option><option value="ERR">Information disclosure</option><option value="SESS">Session security</option><option value="RES">Resource limits and DoS</option><option value="CGI">CGI / FastCGI</option><option value="EXT">Debug and profiling extensions</option><option value="OPC">OPcache</option><option value="DB">Database and credentials</option><option value="ENC">Character encoding</option><option value="CFG">Configuration hygiene</option><option value="FPM">PHP-FPM pools</option><option value="HTA">Apache .htaccess</option><!-- /generated:category-options --></select>
+    <span class="count" id="rule-count" aria-live="polite"></span>
+  </div>
+
+  <div id="rules"><!-- generated:rules -->
+<section class="category" data-category="EXEC">
+<h2 class="category-heading" id="cat-EXEC">Code execution <a class="anchor" href="#cat-EXEC">#</a></h2>
+<details class="rule" id="EXEC-001" data-severity="critical" data-category="EXEC" data-search="exec-001 remote file inclusion enabled allow_url_include lets include/require load code from http://, ftp:// and data:// urls, turning any file-inclusion bug into remote code execution. allow_url_include allow_url_fopen cwe-98">
+  <summary><span class="id">EXEC-001</span><span class="title">Remote file inclusion enabled</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/98.html">CWE-98</a></span></div>
+    <p>allow_url_include lets include/require load code from http://, ftp:// and data:// URLs, turning any file-inclusion bug into remote code execution.</p>
+    <p><b>Directives</b> <code>allow_url_include</code>, <code>allow_url_fopen</code></p>
+    <p class="fix"><b>Fix:</b> Set allow_url_include = Off. The directive has been deprecated since PHP 7.4.</p>
+    <ul><li><a href="https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-include">https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-include</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="EXEC-002" data-severity="medium" data-category="EXEC" data-search="exec-002 remote urls accepted by file functions allow_url_fopen lets fopen(), file_get_contents(), getimagesize() and friends fetch http:// and ftp:// urls, which turns user-controlled paths into server-side request forgery. allow_url_fopen cwe-918">
+  <summary><span class="id">EXEC-002</span><span class="title">Remote URLs accepted by file functions</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/918.html">CWE-918</a></span></div>
+    <p>allow_url_fopen lets fopen(), file_get_contents(), getimagesize() and friends fetch http:// and ftp:// URLs, which turns user-controlled paths into server-side request forgery.</p>
+    <p><b>Directives</b> <code>allow_url_fopen</code></p>
+    <p class="fix"><b>Fix:</b> Set allow_url_fopen = Off and use an HTTP client (cURL) with explicit allow-lists where remote fetches are needed.</p>
+    <ul><li><a href="https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen">https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="EXEC-003" data-severity="critical" data-category="EXEC" data-search="exec-003 auto-prepended/appended file loaded through a stream wrapper auto_prepend_file/auto_append_file pointing at php://input, data:, http:// or another wrapper executes request- or network-supplied code on every request; this is a classic fastcgi exploitation payload. auto_prepend_file auto_append_file cwe-94">
+  <summary><span class="id">EXEC-003</span><span class="title">Auto-prepended/appended file loaded through a stream wrapper</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/94.html">CWE-94</a></span></div>
+    <p>auto_prepend_file/auto_append_file pointing at php://input, data:, http:// or another wrapper executes request- or network-supplied code on every request; this is a classic FastCGI exploitation payload.</p>
+    <p><b>Directives</b> <code>auto_prepend_file</code>, <code>auto_append_file</code></p>
+    <p class="fix"><b>Fix:</b> Remove the directive or point it at a root-owned local file.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-004" data-severity="info" data-category="EXEC" data-search="exec-004 code automatically prepended or appended to every script auto_prepend_file/auto_append_file run a file before/after every script. security plugins use it legitimately, but a value set from .user.ini or .htaccess is a common web-shell persistence technique. auto_prepend_file auto_append_file cwe-506">
+  <summary><span class="id">EXEC-004</span><span class="title">Code automatically prepended or appended to every script</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/506.html">CWE-506</a></span></div>
+    <p>auto_prepend_file/auto_append_file run a file before/after every script. Security plugins use it legitimately, but a value set from .user.ini or .htaccess is a common web-shell persistence technique.</p>
+    <p><b>Directives</b> <code>auto_prepend_file</code>, <code>auto_append_file</code></p>
+    <p class="fix"><b>Fix:</b> Confirm the file is expected, root-owned and not writable by the PHP user; set user_ini.filename = to stop per-directory overrides if they are not needed.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-005" data-severity="medium" data-category="EXEC" data-search="exec-005 command execution functions are available functions that spawn processes turn code injection, deserialization gadgets and file uploads into full operating-system command execution. disable_functions cwe-78">
+  <summary><span class="id">EXEC-005</span><span class="title">Command execution functions are available</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/78.html">CWE-78</a></span></div>
+    <p>Functions that spawn processes turn code injection, deserialization gadgets and file uploads into full operating-system command execution.</p>
+    <p><b>Directives</b> <code>disable_functions</code></p>
+    <p class="fix"><b>Fix:</b> List the functions the application does not use in disable_functions (php.ini or php_admin_value in the FPM pool). Composer and symfony/process need proc_open.</p>
+    <ul><li><a href="https://www.php.net/manual/en/ini.core.php#ini.disable-functions">https://www.php.net/manual/en/ini.core.php#ini.disable-functions</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="EXEC-006" data-severity="medium" data-category="EXEC" data-search="exec-006 disable_functions can be bypassed with every exec-style function disabled, putenv() combined with a function that launches sendmail lets an attacker set ld_preload and run native code anyway. disable_functions cwe-693">
+  <summary><span class="id">EXEC-006</span><span class="title">disable_functions can be bypassed</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/693.html">CWE-693</a></span></div>
+    <p>With every exec-style function disabled, putenv() combined with a function that launches sendmail lets an attacker set LD_PRELOAD and run native code anyway.</p>
+    <p><b>Directives</b> <code>disable_functions</code></p>
+    <p class="fix"><b>Fix:</b> Also disable putenv and the mail launchers that are not needed, or run PHP with a seccomp/AppArmor profile instead of relying on disable_functions.</p>
+    <ul><li><a href="https://www.php.net/manual/en/function.putenv.php">https://www.php.net/manual/en/function.putenv.php</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="EXEC-007" data-severity="high" data-category="EXEC" data-search="exec-007 ffi available to every script ffi.enable = on lets any script call arbitrary c functions, which bypasses disable_functions, open_basedir and every other php-level restriction. ffi.enable cwe-749">
+  <summary><span class="id">EXEC-007</span><span class="title">FFI available to every script</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/749.html">CWE-749</a></span></div>
+    <p>ffi.enable = On lets any script call arbitrary C functions, which bypasses disable_functions, open_basedir and every other PHP-level restriction.</p>
+    <p><b>Directives</b> <code>ffi.enable</code></p>
+    <p class="fix"><b>Fix:</b> Use ffi.enable = preload (the default) so that only preloaded code can use FFI.</p>
+    <ul><li><a href="https://www.php.net/manual/en/ffi.configuration.php">https://www.php.net/manual/en/ffi.configuration.php</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="EXEC-008" data-severity="low" data-category="EXEC" data-search="exec-008 runtime extension loading (dl) enabled enable_dl permits dl() to load shared objects at runtime. dl() is only available to the cli and embed sapis, so the impact is limited to scripts run from the command line. enable_dl cwe-114">
+  <summary><span class="id">EXEC-008</span><span class="title">Runtime extension loading (dl) enabled</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/114.html">CWE-114</a></span></div>
+    <p>enable_dl permits dl() to load shared objects at runtime. dl() is only available to the CLI and embed SAPIs, so the impact is limited to scripts run from the command line.</p>
+    <p><b>Directives</b> <code>enable_dl</code></p>
+    <p class="fix"><b>Fix:</b> Set enable_dl = Off.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-009" data-severity="medium" data-category="EXEC" data-search="exec-009 phar archives writable at runtime phar.readonly = off allows scripts to create and modify phar archives, which helps attackers craft polyglot files for phar:// deserialization and code execution. phar.readonly cwe-502">
+  <summary><span class="id">EXEC-009</span><span class="title">Phar archives writable at runtime</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/502.html">CWE-502</a></span></div>
+    <p>phar.readonly = Off allows scripts to create and modify Phar archives, which helps attackers craft polyglot files for phar:// deserialization and code execution.</p>
+    <p><b>Directives</b> <code>phar.readonly</code></p>
+    <p class="fix"><b>Fix:</b> Set phar.readonly = On except on build machines.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-010" data-severity="low" data-category="EXEC" data-search="exec-010 unsigned phar archives accepted phar.require_hash = off lets php open phar archives without a signature. phar.require_hash cwe-345">
+  <summary><span class="id">EXEC-010</span><span class="title">Unsigned Phar archives accepted</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/345.html">CWE-345</a></span></div>
+    <p>phar.require_hash = Off lets PHP open Phar archives without a signature.</p>
+    <p><b>Directives</b> <code>phar.require_hash</code></p>
+    <p class="fix"><b>Fix:</b> Set phar.require_hash = On.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-011" data-severity="medium" data-category="EXEC" data-search="exec-011 query string exposed as $argv in web requests register_argc_argv = on fills $argv from the query string in web requests. combined with a local file inclusion this enables the pearcmd.php remote-code-execution technique; it is on by default when no php.ini is loaded (e.g. official docker images). register_argc_argv cwe-88">
+  <summary><span class="id">EXEC-011</span><span class="title">Query string exposed as $argv in web requests</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/88.html">CWE-88</a></span></div>
+    <p>register_argc_argv = On fills $argv from the query string in web requests. Combined with a local file inclusion this enables the pearcmd.php remote-code-execution technique; it is On by default when no php.ini is loaded (e.g. official Docker images).</p>
+    <p><b>Directives</b> <code>register_argc_argv</code></p>
+    <p class="fix"><b>Fix:</b> Set register_argc_argv = Off for web SAPIs.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-012" data-severity="high" data-category="EXEC" data-search="exec-012 imap_open() may run rsh/ssh commands imap.enable_insecure_rsh lets imap_open() mailbox names inject arguments into rsh/ssh (cve-2018-19518). imap.enable_insecure_rsh cwe-78">
+  <summary><span class="id">EXEC-012</span><span class="title">imap_open() may run rsh/ssh commands</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/78.html">CWE-78</a></span></div>
+    <p>imap.enable_insecure_rsh lets imap_open() mailbox names inject arguments into rsh/ssh (CVE-2018-19518).</p>
+    <p><b>Directives</b> <code>imap.enable_insecure_rsh</code></p>
+    <p class="fix"><b>Fix:</b> Set imap.enable_insecure_rsh = Off.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2018-19518">https://nvd.nist.gov/vuln/detail/CVE-2018-19518</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="EXEC-013" data-severity="high" data-category="EXEC" data-search="exec-013 dangerous sendmail options configured sendmail options such as -x (log file), -o/-c (alternate queue/config) or exim&#x27;s -be (expansion test) let mail() write attacker-influenced files or evaluate expressions. sendmail_path mail.force_extra_parameters cwe-88">
+  <summary><span class="id">EXEC-013</span><span class="title">Dangerous sendmail options configured</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/88.html">CWE-88</a></span></div>
+    <p>sendmail options such as -X (log file), -O/-C (alternate queue/config) or Exim&#x27;s -be (expansion test) let mail() write attacker-influenced files or evaluate expressions.</p>
+    <p><b>Directives</b> <code>sendmail_path</code>, <code>mail.force_extra_parameters</code></p>
+    <p class="fix"><b>Fix:</b> Keep sendmail_path to an absolute binary with -t -i, and do not force extra parameters.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-014" data-severity="low" data-category="EXEC" data-search="exec-014 assertions compiled and executed in production zend.assertions = 1 executes assert() calls in production. before php 8.0 string assertions were evaluated as code. zend.assertions assert.active cwe-489">
+  <summary><span class="id">EXEC-014</span><span class="title">Assertions compiled and executed in production</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Profile</b> production only</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/489.html">CWE-489</a></span></div>
+    <p>zend.assertions = 1 executes assert() calls in production. Before PHP 8.0 string assertions were evaluated as code.</p>
+    <p><b>Directives</b> <code>zend.assertions</code>, <code>assert.active</code></p>
+    <p class="fix"><b>Fix:</b> Set zend.assertions = -1 in production.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-015" data-severity="low" data-category="EXEC" data-search="exec-015 callback invoked when unserialize() meets an unknown class unserialize_callback_func is called with attacker-chosen class names while unserializing untrusted data, which can trigger autoloading of unexpected files. unserialize_callback_func cwe-502">
+  <summary><span class="id">EXEC-015</span><span class="title">Callback invoked when unserialize() meets an unknown class</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/502.html">CWE-502</a></span></div>
+    <p>unserialize_callback_func is called with attacker-chosen class names while unserializing untrusted data, which can trigger autoloading of unexpected files.</p>
+    <p><b>Directives</b> <code>unserialize_callback_func</code></p>
+    <p class="fix"><b>Fix:</b> Leave unserialize_callback_func empty unless the callback is strictly validated.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-016" data-severity="info" data-category="EXEC" data-search="exec-016 include_path contains the current directory a &#x27;.&#x27; entry makes relative include/require resolve against the working directory, which may be attacker-influenced (e.g. upload directories). include_path cwe-427">
+  <summary><span class="id">EXEC-016</span><span class="title">include_path contains the current directory</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/427.html">CWE-427</a></span></div>
+    <p>A &#x27;.&#x27; entry makes relative include/require resolve against the working directory, which may be attacker-influenced (e.g. upload directories).</p>
+    <p><b>Directives</b> <code>include_path</code></p>
+    <p class="fix"><b>Fix:</b> Use absolute includes (__DIR__ . &#x27;/file.php&#x27;) or remove &#x27;.&#x27; from include_path.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXEC-017" data-severity="low" data-category="EXEC" data-search="exec-017 session upload progress writes request data into session files with upload progress enabled, any multipart request stores attacker-controlled data in a session file, which turns a local file inclusion into code execution even without a session. session.upload_progress.enabled session.upload_progress.cleanup cwe-98">
+  <summary><span class="id">EXEC-017</span><span class="title">Session upload progress writes request data into session files</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Code execution</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/98.html">CWE-98</a></span></div>
+    <p>With upload progress enabled, any multipart request stores attacker-controlled data in a session file, which turns a local file inclusion into code execution even without a session.</p>
+    <p><b>Directives</b> <code>session.upload_progress.enabled</code>, <code>session.upload_progress.cleanup</code></p>
+    <p class="fix"><b>Fix:</b> Set session.upload_progress.enabled = Off unless upload progress bars are used; never disable session.upload_progress.cleanup.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="FS">
+<h2 class="category-heading" id="cat-FS">Filesystem and paths <a class="anchor" href="#cat-FS">#</a></h2>
+<details class="rule" id="FS-001" data-severity="medium" data-category="FS" data-search="fs-001 open_basedir is not set without open_basedir, a path traversal or file-inclusion bug can reach any file the php user can read (/etc/passwd, other sites, keys). php does not treat it as a hard security boundary, but it limits the impact of common bugs. open_basedir cwe-22">
+  <summary><span class="id">FS-001</span><span class="title">open_basedir is not set</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/22.html">CWE-22</a></span></div>
+    <p>Without open_basedir, a path traversal or file-inclusion bug can reach any file the PHP user can read (/etc/passwd, other sites, keys). PHP does not treat it as a hard security boundary, but it limits the impact of common bugs.</p>
+    <p><b>Directives</b> <code>open_basedir</code></p>
+    <p class="fix"><b>Fix:</b> Set open_basedir to the application directory plus its temp/session/upload directories, each with a trailing slash.</p>
+    <ul><li><a href="https://www.php.net/manual/en/ini.core.php#ini.open-basedir">https://www.php.net/manual/en/ini.core.php#ini.open-basedir</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="FS-002" data-severity="medium" data-category="FS" data-search="fs-002 open_basedir allows the whole filesystem an open_basedir entry of &#x27;/&#x27; (or a bare drive) disables the restriction entirely. open_basedir cwe-22">
+  <summary><span class="id">FS-002</span><span class="title">open_basedir allows the whole filesystem</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/22.html">CWE-22</a></span></div>
+    <p>An open_basedir entry of &#x27;/&#x27; (or a bare drive) disables the restriction entirely.</p>
+    <p><b>Directives</b> <code>open_basedir</code></p>
+    <p class="fix"><b>Fix:</b> List only the directories the application needs.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-003" data-severity="low" data-category="FS" data-search="fs-003 open_basedir entries match by prefix open_basedir compares prefixes: &#x27;/var/www/site&#x27; also allows &#x27;/var/www/site-backup&#x27;. a trailing separator restricts the entry to that directory. open_basedir cwe-22">
+  <summary><span class="id">FS-003</span><span class="title">open_basedir entries match by prefix</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/22.html">CWE-22</a></span></div>
+    <p>open_basedir compares prefixes: &#x27;/var/www/site&#x27; also allows &#x27;/var/www/site-backup&#x27;. A trailing separator restricts the entry to that directory.</p>
+    <p><b>Directives</b> <code>open_basedir</code></p>
+    <p class="fix"><b>Fix:</b> End every directory entry with &#x27;/&#x27; (or &#x27;\&#x27; on Windows).</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-004" data-severity="low" data-category="FS" data-search="fs-004 open_basedir uses relative entries relative entries such as &#x27;.&#x27; are resolved against the current working directory, which changes with chdir() and the requested script. open_basedir cwe-22">
+  <summary><span class="id">FS-004</span><span class="title">open_basedir uses relative entries</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/22.html">CWE-22</a></span></div>
+    <p>Relative entries such as &#x27;.&#x27; are resolved against the current working directory, which changes with chdir() and the requested script.</p>
+    <p><b>Directives</b> <code>open_basedir</code></p>
+    <p class="fix"><b>Fix:</b> Use absolute directories only.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-005" data-severity="high" data-category="FS" data-search="fs-005 security-relevant path is world-writable a path php loads code, certificates, sessions or logs from is writable by every local user, or sits in a world-writable directory where it can be created or replaced.  cwe-732">
+  <summary><span class="id">FS-005</span><span class="title">Security-relevant path is world-writable</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/732.html">CWE-732</a></span></div>
+    <p>A path PHP loads code, certificates, sessions or logs from is writable by every local user, or sits in a world-writable directory where it can be created or replaced.</p>
+    
+    <p class="fix"><b>Fix:</b> Make the path owned by root (or the deploy user) and not writable by others; use a dedicated directory instead of /tmp.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-006" data-severity="high" data-category="FS" data-search="fs-006 sensitive path inside a web-served directory logs, sessions, uploads or caches under the document root can be downloaded, and log or session files that are both web-reachable and includable enable log-poisoning attacks.  cwe-538">
+  <summary><span class="id">FS-006</span><span class="title">Sensitive path inside a web-served directory</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/538.html">CWE-538</a></span></div>
+    <p>Logs, sessions, uploads or caches under the document root can be downloaded, and log or session files that are both web-reachable and includable enable log-poisoning attacks.</p>
+    
+    <p class="fix"><b>Fix:</b> Move the path outside the document root. Pass --webroot to make this check exact.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-007" data-severity="info" data-category="FS" data-search="fs-007 configured path does not exist an explicitly configured path does not exist on the audited system; php silently falls back or fails at runtime, and whoever creates the path first controls it.  ">
+  <summary><span class="id">FS-007</span><span class="title">Configured path does not exist</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span></div>
+    <p>An explicitly configured path does not exist on the audited system; PHP silently falls back or fails at runtime, and whoever creates the path first controls it.</p>
+    
+    <p class="fix"><b>Fix:</b> Create the path with the intended owner and permissions, or remove the directive.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-008" data-severity="info" data-category="FS" data-search="fs-008 per-directory .user.ini overrides enabled with cgi/fastcgi, any directory may carry a .user.ini that changes perdir settings such as auto_prepend_file. an upload vulnerability then becomes persistent code execution. user_ini.filename cwe-15">
+  <summary><span class="id">FS-008</span><span class="title">Per-directory .user.ini overrides enabled</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>SAPIs</b> cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/15.html">CWE-15</a></span></div>
+    <p>With CGI/FastCGI, any directory may carry a .user.ini that changes PERDIR settings such as auto_prepend_file. An upload vulnerability then becomes persistent code execution.</p>
+    <p><b>Directives</b> <code>user_ini.filename</code></p>
+    <p class="fix"><b>Fix:</b> Set user_ini.filename = (empty) if applications do not need per-directory settings.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-009" data-severity="info" data-category="FS" data-search="fs-009 http file uploads enabled file_uploads lets every script receive files; disable it on hosts that never accept uploads. file_uploads cwe-434">
+  <summary><span class="id">FS-009</span><span class="title">HTTP file uploads enabled</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/434.html">CWE-434</a></span></div>
+    <p>file_uploads lets every script receive files; disable it on hosts that never accept uploads.</p>
+    <p><b>Directives</b> <code>file_uploads</code></p>
+    <p class="fix"><b>Fix:</b> Set file_uploads = Off where uploads are not needed.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-010" data-severity="info" data-category="FS" data-search="fs-010 uploads stored in the shared system temp directory without upload_tmp_dir, uploads land in the system temp directory shared with every other process, which eases temp-file races and lfi-via-upload techniques. upload_tmp_dir file_uploads cwe-377">
+  <summary><span class="id">FS-010</span><span class="title">Uploads stored in the shared system temp directory</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/377.html">CWE-377</a></span></div>
+    <p>Without upload_tmp_dir, uploads land in the system temp directory shared with every other process, which eases temp-file races and LFI-via-upload techniques.</p>
+    <p><b>Directives</b> <code>upload_tmp_dir</code>, <code>file_uploads</code></p>
+    <p class="fix"><b>Fix:</b> Point upload_tmp_dir at a dedicated directory owned by the PHP user, mode 0700.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FS-011" data-severity="critical" data-category="FS" data-search="fs-011 configuration file writable by other users anyone who can write a php configuration file or its directory can enable auto_prepend_file, load extensions or disable protections.  cwe-732">
+  <summary><span class="id">FS-011</span><span class="title">Configuration file writable by other users</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Filesystem and paths</span><span><b>Scope</b> file</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/732.html">CWE-732</a></span></div>
+    <p>Anyone who can write a PHP configuration file or its directory can enable auto_prepend_file, load extensions or disable protections.</p>
+    
+    <p class="fix"><b>Fix:</b> Make configuration files and their directories owned by root and not writable by group or others.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="ERR">
+<h2 class="category-heading" id="cat-ERR">Information disclosure <a class="anchor" href="#cat-ERR">#</a></h2>
+<details class="rule" id="ERR-001" data-severity="medium" data-category="ERR" data-search="err-001 errors displayed to visitors display_errors prints warnings and stack traces into responses, disclosing paths, queries, and sometimes credentials. php&#x27;s built-in default is on when no php.ini is loaded. display_errors html_errors cwe-209">
+  <summary><span class="id">ERR-001</span><span class="title">Errors displayed to visitors</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Development</b> info</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/209.html">CWE-209</a></span></div>
+    <p>display_errors prints warnings and stack traces into responses, disclosing paths, queries, and sometimes credentials. PHP&#x27;s built-in default is On when no php.ini is loaded.</p>
+    <p><b>Directives</b> <code>display_errors</code>, <code>html_errors</code></p>
+    <p class="fix"><b>Fix:</b> Set display_errors = Off and log_errors = On in production.</p>
+    <ul><li><a href="https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-errors">https://www.php.net/manual/en/errorfunc.configuration.php#ini.display-errors</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="ERR-002" data-severity="low" data-category="ERR" data-search="err-002 start-up errors displayed display_startup_errors shows errors raised during php&#x27;s start-up sequence in the output. display_startup_errors cwe-209">
+  <summary><span class="id">ERR-002</span><span class="title">Start-up errors displayed</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Development</b> info</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/209.html">CWE-209</a></span></div>
+    <p>display_startup_errors shows errors raised during PHP&#x27;s start-up sequence in the output.</p>
+    <p><b>Directives</b> <code>display_startup_errors</code></p>
+    <p class="fix"><b>Fix:</b> Set display_startup_errors = Off in production.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-003" data-severity="low" data-category="ERR" data-search="err-003 errors are not logged without log_errors, probing and exploitation attempts that trigger warnings leave no trace. log_errors cwe-778">
+  <summary><span class="id">ERR-003</span><span class="title">Errors are not logged</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/778.html">CWE-778</a></span></div>
+    <p>Without log_errors, probing and exploitation attempts that trigger warnings leave no trace.</p>
+    <p><b>Directives</b> <code>log_errors</code></p>
+    <p class="fix"><b>Fix:</b> Set log_errors = On and configure error_log.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-004" data-severity="low" data-category="ERR" data-search="err-004 php version disclosed in http headers expose_php adds an x-powered-by header with the exact php version, which helps attackers pick exploits. expose_php cwe-200">
+  <summary><span class="id">ERR-004</span><span class="title">PHP version disclosed in HTTP headers</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/200.html">CWE-200</a></span></div>
+    <p>expose_php adds an X-Powered-By header with the exact PHP version, which helps attackers pick exploits.</p>
+    <p><b>Directives</b> <code>expose_php</code></p>
+    <p class="fix"><b>Fix:</b> Set expose_php = Off.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-005" data-severity="low" data-category="ERR" data-search="err-005 function arguments included in stack traces with zend.exception_ignore_args = off, exception traces carry argument values such as passwords and tokens into logs and error pages. zend.exception_ignore_args cwe-532">
+  <summary><span class="id">ERR-005</span><span class="title">Function arguments included in stack traces</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>Profile</b> production only</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/532.html">CWE-532</a></span></div>
+    <p>With zend.exception_ignore_args = Off, exception traces carry argument values such as passwords and tokens into logs and error pages.</p>
+    <p><b>Directives</b> <code>zend.exception_ignore_args</code></p>
+    <p class="fix"><b>Fix:</b> Set zend.exception_ignore_args = On in production.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-006" data-severity="low" data-category="ERR" data-search="err-006 error reporting disabled error_reporting = 0 suppresses logging of every error, hiding attacks and bugs alike. error_reporting cwe-778">
+  <summary><span class="id">ERR-006</span><span class="title">Error reporting disabled</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/778.html">CWE-778</a></span></div>
+    <p>error_reporting = 0 suppresses logging of every error, hiding attacks and bugs alike.</p>
+    <p><b>Directives</b> <code>error_reporting</code></p>
+    <p class="fix"><b>Fix:</b> Use error_reporting = E_ALL and control visibility with display_errors.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-007" data-severity="low" data-category="ERR" data-search="err-007 script path added to outgoing mail headers mail.add_x_header adds x-php-originating-script with the script&#x27;s uid and file name to every message. mail.add_x_header cwe-200">
+  <summary><span class="id">ERR-007</span><span class="title">Script path added to outgoing mail headers</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/200.html">CWE-200</a></span></div>
+    <p>mail.add_x_header adds X-PHP-Originating-Script with the script&#x27;s UID and file name to every message.</p>
+    <p><b>Directives</b> <code>mail.add_x_header</code></p>
+    <p class="fix"><b>Fix:</b> Set mail.add_x_header = Off.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-008" data-severity="low" data-category="ERR" data-search="err-008 environment variables copied into $_env an &#x27;e&#x27; in variables_order copies the process environment, often holding secrets, into $_env where debug dumps and phpinfo() reveal it. variables_order cwe-526">
+  <summary><span class="id">ERR-008</span><span class="title">Environment variables copied into $_ENV</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/526.html">CWE-526</a></span></div>
+    <p>An &#x27;E&#x27; in variables_order copies the process environment, often holding secrets, into $_ENV where debug dumps and phpinfo() reveal it.</p>
+    <p><b>Directives</b> <code>variables_order</code></p>
+    <p class="fix"><b>Fix:</b> Use variables_order = &quot;GPCS&quot; and read configuration with getenv().</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-009" data-severity="low" data-category="ERR" data-search="err-009 error log created world-writable error_log_mode controls the permissions of a newly created error log; a world-writable log can be forged or used for log poisoning. error_log_mode cwe-732">
+  <summary><span class="id">ERR-009</span><span class="title">Error log created world-writable</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/732.html">CWE-732</a></span></div>
+    <p>error_log_mode controls the permissions of a newly created error log; a world-writable log can be forged or used for log poisoning.</p>
+    <p><b>Directives</b> <code>error_log_mode</code></p>
+    <p class="fix"><b>Fix:</b> Use error_log_mode = 0640 or stricter.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-010" data-severity="info" data-category="ERR" data-search="err-010 phpinfo() callable a forgotten phpinfo() page reveals configuration, paths, environment variables and cookies. disable_functions cwe-200">
+  <summary><span class="id">ERR-010</span><span class="title">phpinfo() callable</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Profile</b> production only</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/200.html">CWE-200</a></span></div>
+    <p>A forgotten phpinfo() page reveals configuration, paths, environment variables and cookies.</p>
+    <p><b>Directives</b> <code>disable_functions</code></p>
+    <p class="fix"><b>Fix:</b> Add phpinfo to disable_functions in production.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ERR-011" data-severity="info" data-category="ERR" data-search="err-011 long string arguments kept in stack traces raising zend.exception_string_param_max_len stores more of each string argument in traces. zend.exception_string_param_max_len cwe-532">
+  <summary><span class="id">ERR-011</span><span class="title">Long string arguments kept in stack traces</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Information disclosure</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/532.html">CWE-532</a></span></div>
+    <p>Raising zend.exception_string_param_max_len stores more of each string argument in traces.</p>
+    <p><b>Directives</b> <code>zend.exception_string_param_max_len</code></p>
+    <p class="fix"><b>Fix:</b> Keep the default (15) or lower.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="SESS">
+<h2 class="category-heading" id="cat-SESS">Session security <a class="anchor" href="#cat-SESS">#</a></h2>
+<details class="rule" id="SESS-001" data-severity="medium" data-category="SESS" data-search="sess-001 uninitialised session ids accepted without strict mode php adopts any session id a client presents, enabling session fixation. session.use_strict_mode cwe-384">
+  <summary><span class="id">SESS-001</span><span class="title">Uninitialised session IDs accepted</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/384.html">CWE-384</a></span></div>
+    <p>Without strict mode PHP adopts any session ID a client presents, enabling session fixation.</p>
+    <p><b>Directives</b> <code>session.use_strict_mode</code></p>
+    <p class="fix"><b>Fix:</b> Set session.use_strict_mode = 1.</p>
+    <ul><li><a href="https://www.php.net/manual/en/session.security.ini.php">https://www.php.net/manual/en/session.security.ini.php</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="SESS-002" data-severity="high" data-category="SESS" data-search="sess-002 session ids accepted outside cookies session.use_only_cookies = 0 accepts session ids from the url, enabling fixation via links and leaking ids through referer headers and logs. session.use_only_cookies cwe-598">
+  <summary><span class="id">SESS-002</span><span class="title">Session IDs accepted outside cookies</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/598.html">CWE-598</a></span></div>
+    <p>session.use_only_cookies = 0 accepts session IDs from the URL, enabling fixation via links and leaking IDs through Referer headers and logs.</p>
+    <p><b>Directives</b> <code>session.use_only_cookies</code></p>
+    <p class="fix"><b>Fix:</b> Set session.use_only_cookies = 1.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-003" data-severity="high" data-category="SESS" data-search="sess-003 transparent session ids in urls session.use_trans_sid rewrites links to carry the session id, which leaks through referer, browser history, proxies and shared links. session.use_trans_sid cwe-598">
+  <summary><span class="id">SESS-003</span><span class="title">Transparent session IDs in URLs</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/598.html">CWE-598</a></span></div>
+    <p>session.use_trans_sid rewrites links to carry the session ID, which leaks through Referer, browser history, proxies and shared links.</p>
+    <p><b>Directives</b> <code>session.use_trans_sid</code></p>
+    <p class="fix"><b>Fix:</b> Set session.use_trans_sid = 0.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-004" data-severity="medium" data-category="SESS" data-search="sess-004 session cookies disabled session.use_cookies = 0 forces session ids into urls or breaks sessions entirely. session.use_cookies cwe-598">
+  <summary><span class="id">SESS-004</span><span class="title">Session cookies disabled</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/598.html">CWE-598</a></span></div>
+    <p>session.use_cookies = 0 forces session IDs into URLs or breaks sessions entirely.</p>
+    <p><b>Directives</b> <code>session.use_cookies</code></p>
+    <p class="fix"><b>Fix:</b> Set session.use_cookies = 1.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-005" data-severity="medium" data-category="SESS" data-search="sess-005 session cookie readable from javascript without httponly, any xss can read document.cookie and steal the session. session.cookie_httponly cwe-1004">
+  <summary><span class="id">SESS-005</span><span class="title">Session cookie readable from JavaScript</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/1004.html">CWE-1004</a></span></div>
+    <p>Without HttpOnly, any XSS can read document.cookie and steal the session.</p>
+    <p><b>Directives</b> <code>session.cookie_httponly</code></p>
+    <p class="fix"><b>Fix:</b> Set session.cookie_httponly = 1.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-006" data-severity="medium" data-category="SESS" data-search="sess-006 session cookie sent over plain http without the secure flag the session cookie is sent over unencrypted connections and can be sniffed or injected. session.cookie_secure cwe-614">
+  <summary><span class="id">SESS-006</span><span class="title">Session cookie sent over plain HTTP</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/614.html">CWE-614</a></span></div>
+    <p>Without the Secure flag the session cookie is sent over unencrypted connections and can be sniffed or injected.</p>
+    <p><b>Directives</b> <code>session.cookie_secure</code></p>
+    <p class="fix"><b>Fix:</b> Set session.cookie_secure = 1 on sites served over HTTPS.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-007" data-severity="low" data-category="SESS" data-search="sess-007 session cookie without samesite protection without samesite=lax or strict the session cookie accompanies cross-site requests, which enables csrf. session.cookie_samesite session.cookie_secure cwe-1275">
+  <summary><span class="id">SESS-007</span><span class="title">Session cookie without SameSite protection</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/1275.html">CWE-1275</a></span></div>
+    <p>Without SameSite=Lax or Strict the session cookie accompanies cross-site requests, which enables CSRF.</p>
+    <p><b>Directives</b> <code>session.cookie_samesite</code>, <code>session.cookie_secure</code></p>
+    <p class="fix"><b>Fix:</b> Set session.cookie_samesite = &quot;Lax&quot; (or &quot;Strict&quot;).</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-008" data-severity="high" data-category="SESS" data-search="sess-008 weak session id entropy session ids need at least 128 bits of entropy (sid_length x sid_bits_per_character) to resist brute force. session.sid_length session.sid_bits_per_character cwe-331">
+  <summary><span class="id">SESS-008</span><span class="title">Weak session ID entropy</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/331.html">CWE-331</a></span></div>
+    <p>Session IDs need at least 128 bits of entropy (sid_length x sid_bits_per_character) to resist brute force.</p>
+    <p><b>Directives</b> <code>session.sid_length</code>, <code>session.sid_bits_per_character</code></p>
+    <p class="fix"><b>Fix:</b> Keep sid_length &gt;= 32 with sid_bits_per_character = 4, or use 5/6 bits per character.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-009" data-severity="medium" data-category="SESS" data-search="sess-009 session files stored in a shared or listable directory session files are named after the session id. in a directory other users can list (such as /tmp), they can harvest ids and hijack sessions, or plant crafted session files. session.save_path session.save_handler cwe-552">
+  <summary><span class="id">SESS-009</span><span class="title">Session files stored in a shared or listable directory</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/552.html">CWE-552</a></span></div>
+    <p>Session files are named after the session ID. In a directory other users can list (such as /tmp), they can harvest IDs and hijack sessions, or plant crafted session files.</p>
+    <p><b>Directives</b> <code>session.save_path</code>, <code>session.save_handler</code></p>
+    <p class="fix"><b>Fix:</b> Use a dedicated session directory such as /var/lib/php/sessions with mode 1733 or 0700.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-010" data-severity="medium" data-category="SESS" data-search="sess-010 session files created with permissive mode session.save_path = &quot;n;mode;/path&quot; sets the file mode of session files; group or world access exposes session contents. session.save_path cwe-276">
+  <summary><span class="id">SESS-010</span><span class="title">Session files created with permissive mode</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/276.html">CWE-276</a></span></div>
+    <p>session.save_path = &quot;N;MODE;/path&quot; sets the file mode of session files; group or world access exposes session contents.</p>
+    <p><b>Directives</b> <code>session.save_path</code></p>
+    <p class="fix"><b>Fix:</b> Use mode 600 (the default).</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-011" data-severity="low" data-category="SESS" data-search="sess-011 long-lived sessions session data is kept for gc_maxlifetime seconds of inactivity; long lifetimes widen the window for stolen session ids. session.gc_maxlifetime cwe-613">
+  <summary><span class="id">SESS-011</span><span class="title">Long-lived sessions</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/613.html">CWE-613</a></span></div>
+    <p>Session data is kept for gc_maxlifetime seconds of inactivity; long lifetimes widen the window for stolen session IDs.</p>
+    <p><b>Directives</b> <code>session.gc_maxlifetime</code></p>
+    <p class="fix"><b>Fix:</b> Keep session.gc_maxlifetime at a few hours or less and implement absolute timeouts in the application.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-012" data-severity="info" data-category="SESS" data-search="sess-012 default session cookie name phpsessid identifies the backend as php. session.name cwe-200">
+  <summary><span class="id">SESS-012</span><span class="title">Default session cookie name</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/200.html">CWE-200</a></span></div>
+    <p>PHPSESSID identifies the backend as PHP.</p>
+    <p><b>Directives</b> <code>session.name</code></p>
+    <p class="fix"><b>Fix:</b> Choose an application-specific session.name.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-013" data-severity="info" data-category="SESS" data-search="sess-013 persistent session cookie a non-zero cookie_lifetime stores the session cookie on disk in the browser. session.cookie_lifetime cwe-539">
+  <summary><span class="id">SESS-013</span><span class="title">Persistent session cookie</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/539.html">CWE-539</a></span></div>
+    <p>A non-zero cookie_lifetime stores the session cookie on disk in the browser.</p>
+    <p><b>Directives</b> <code>session.cookie_lifetime</code></p>
+    <p class="fix"><b>Fix:</b> Use session.cookie_lifetime = 0 and handle &quot;remember me&quot; separately.</p>
+    
+  </div>
+</details>
+<details class="rule" id="SESS-014" data-severity="info" data-category="SESS" data-search="sess-014 session cookie shared with other hosts a cookie_domain makes the session cookie visible to every subdomain, so one compromised subdomain can read or overwrite it. session.cookie_domain cwe-565">
+  <summary><span class="id">SESS-014</span><span class="title">Session cookie shared with other hosts</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Session security</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/565.html">CWE-565</a></span></div>
+    <p>A cookie_domain makes the session cookie visible to every subdomain, so one compromised subdomain can read or overwrite it.</p>
+    <p><b>Directives</b> <code>session.cookie_domain</code></p>
+    <p class="fix"><b>Fix:</b> Leave session.cookie_domain empty unless sessions must span subdomains.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="RES">
+<h2 class="category-heading" id="cat-RES">Resource limits and DoS <a class="anchor" href="#cat-RES">#</a></h2>
+<details class="rule" id="RES-001" data-severity="medium" data-category="RES" data-search="res-001 unlimited or very large memory_limit memory_limit = -1 lets one request exhaust server memory. memory_limit cwe-770">
+  <summary><span class="id">RES-001</span><span class="title">Unlimited or very large memory_limit</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/770.html">CWE-770</a></span></div>
+    <p>memory_limit = -1 lets one request exhaust server memory.</p>
+    <p><b>Directives</b> <code>memory_limit</code></p>
+    <p class="fix"><b>Fix:</b> Set memory_limit to what the application needs (typically 128M-512M).</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-002" data-severity="medium" data-category="RES" data-search="res-002 unlimited or long max_execution_time max_execution_time = 0 lets slow or stuck requests occupy workers forever. max_execution_time cwe-400">
+  <summary><span class="id">RES-002</span><span class="title">Unlimited or long max_execution_time</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/400.html">CWE-400</a></span></div>
+    <p>max_execution_time = 0 lets slow or stuck requests occupy workers forever.</p>
+    <p><b>Directives</b> <code>max_execution_time</code></p>
+    <p class="fix"><b>Fix:</b> Use 30-60 seconds for web requests (and request_terminate_timeout in FPM).</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-003" data-severity="medium" data-category="RES" data-search="res-003 unlimited or very large post bodies post_max_size = 0 removes the request body limit. post_max_size cwe-770">
+  <summary><span class="id">RES-003</span><span class="title">Unlimited or very large POST bodies</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/770.html">CWE-770</a></span></div>
+    <p>post_max_size = 0 removes the request body limit.</p>
+    <p><b>Directives</b> <code>post_max_size</code></p>
+    <p class="fix"><b>Fix:</b> Set post_max_size slightly above the largest legitimate upload.</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-004" data-severity="low" data-category="RES" data-search="res-004 very large uploads accepted large upload limits let clients fill the temp directory and disk. upload_max_filesize post_max_size cwe-770">
+  <summary><span class="id">RES-004</span><span class="title">Very large uploads accepted</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/770.html">CWE-770</a></span></div>
+    <p>Large upload limits let clients fill the temp directory and disk.</p>
+    <p><b>Directives</b> <code>upload_max_filesize</code>, <code>post_max_size</code></p>
+    <p class="fix"><b>Fix:</b> Keep upload_max_filesize to the real requirement and below post_max_size.</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-005" data-severity="low" data-category="RES" data-search="res-005 max_input_vars raised or disabled max_input_vars caps request variables and protects against hash-collision dos (cve-2011-4885). max_input_vars cwe-407">
+  <summary><span class="id">RES-005</span><span class="title">max_input_vars raised or disabled</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/407.html">CWE-407</a></span></div>
+    <p>max_input_vars caps request variables and protects against hash-collision DoS (CVE-2011-4885).</p>
+    <p><b>Directives</b> <code>max_input_vars</code></p>
+    <p class="fix"><b>Fix:</b> Keep max_input_vars at 1000-5000.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2011-4885">https://nvd.nist.gov/vuln/detail/CVE-2011-4885</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="RES-006" data-severity="low" data-category="RES" data-search="res-006 deep input nesting allowed deeply nested request arrays cost cpu and memory to parse. max_input_nesting_level cwe-674">
+  <summary><span class="id">RES-006</span><span class="title">Deep input nesting allowed</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/674.html">CWE-674</a></span></div>
+    <p>Deeply nested request arrays cost CPU and memory to parse.</p>
+    <p><b>Directives</b> <code>max_input_nesting_level</code></p>
+    <p class="fix"><b>Fix:</b> Keep max_input_nesting_level at 64.</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-007" data-severity="low" data-category="RES" data-search="res-007 many files per request accepted each uploaded file costs a temp file and file descriptor. max_file_uploads cwe-770">
+  <summary><span class="id">RES-007</span><span class="title">Many files per request accepted</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/770.html">CWE-770</a></span></div>
+    <p>Each uploaded file costs a temp file and file descriptor.</p>
+    <p><b>Directives</b> <code>max_file_uploads</code></p>
+    <p class="fix"><b>Fix:</b> Keep max_file_uploads at 20 or the application&#x27;s real need.</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-008" data-severity="low" data-category="RES" data-search="res-008 regular expression limits raised higher pcre limits make catastrophic backtracking (redos) and stack exhaustion crashes easier. pcre.backtrack_limit pcre.recursion_limit cwe-1333">
+  <summary><span class="id">RES-008</span><span class="title">Regular expression limits raised</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/1333.html">CWE-1333</a></span></div>
+    <p>Higher PCRE limits make catastrophic backtracking (ReDoS) and stack exhaustion crashes easier.</p>
+    <p><b>Directives</b> <code>pcre.backtrack_limit</code>, <code>pcre.recursion_limit</code></p>
+    <p class="fix"><b>Fix:</b> Keep pcre.backtrack_limit = 1000000 and pcre.recursion_limit = 100000.</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-009" data-severity="low" data-category="RES" data-search="res-009 unserialize() nesting depth unlimited unserialize_max_depth = 0 lets deeply nested payloads exhaust the stack. unserialize_max_depth cwe-674">
+  <summary><span class="id">RES-009</span><span class="title">unserialize() nesting depth unlimited</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/674.html">CWE-674</a></span></div>
+    <p>unserialize_max_depth = 0 lets deeply nested payloads exhaust the stack.</p>
+    <p><b>Directives</b> <code>unserialize_max_depth</code></p>
+    <p class="fix"><b>Fix:</b> Keep unserialize_max_depth = 4096 or lower.</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-010" data-severity="low" data-category="RES" data-search="res-010 socket reads may block indefinitely a negative or very long default_socket_timeout lets slow remote peers hold workers. default_socket_timeout cwe-400">
+  <summary><span class="id">RES-010</span><span class="title">Socket reads may block indefinitely</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/400.html">CWE-400</a></span></div>
+    <p>A negative or very long default_socket_timeout lets slow remote peers hold workers.</p>
+    <p><b>Directives</b> <code>default_socket_timeout</code></p>
+    <p class="fix"><b>Fix:</b> Use 60 seconds or less.</p>
+    
+  </div>
+</details>
+<details class="rule" id="RES-011" data-severity="low" data-category="RES" data-search="res-011 unlimited multipart body parts max_multipart_body_parts bounds multipart parsing (cve-2023-0662); when it is -1 the bound is max_input_vars + max_file_uploads, so raising those raises it too. max_multipart_body_parts max_input_vars max_file_uploads cwe-770">
+  <summary><span class="id">RES-011</span><span class="title">Unlimited multipart body parts</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Resource limits and DoS</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/770.html">CWE-770</a></span></div>
+    <p>max_multipart_body_parts bounds multipart parsing (CVE-2023-0662); when it is -1 the bound is max_input_vars + max_file_uploads, so raising those raises it too.</p>
+    <p><b>Directives</b> <code>max_multipart_body_parts</code>, <code>max_input_vars</code>, <code>max_file_uploads</code></p>
+    <p class="fix"><b>Fix:</b> Keep max_input_vars and max_file_uploads modest, or set max_multipart_body_parts.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-0662">https://nvd.nist.gov/vuln/detail/CVE-2023-0662</a></li></ul>
+  </div>
+</details>
+</section>
+<section class="category" data-category="CGI">
+<h2 class="category-heading" id="cat-CGI">CGI / FastCGI <a class="anchor" href="#cat-CGI">#</a></h2>
+<details class="rule" id="CGI-001" data-severity="high" data-category="CGI" data-search="cgi-001 php-cgi callable without web-server redirect cgi.force_redirect = 0 lets php-cgi be invoked directly, the precondition for argument injection such as cve-2012-1823 and cve-2024-4577. cgi.force_redirect cwe-88">
+  <summary><span class="id">CGI-001</span><span class="title">php-cgi callable without web-server redirect</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> CGI / FastCGI</span><span><b>Scope</b> config</span><span><b>SAPIs</b> cgi, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/88.html">CWE-88</a></span></div>
+    <p>cgi.force_redirect = 0 lets php-cgi be invoked directly, the precondition for argument injection such as CVE-2012-1823 and CVE-2024-4577.</p>
+    <p><b>Directives</b> <code>cgi.force_redirect</code></p>
+    <p class="fix"><b>Fix:</b> Keep cgi.force_redirect = 1 (only IIS needs it off), or move to PHP-FPM.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2012-1823">https://nvd.nist.gov/vuln/detail/CVE-2012-1823</a></li><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-4577">https://nvd.nist.gov/vuln/detail/CVE-2024-4577</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="CGI-002" data-severity="medium" data-category="CGI" data-search="cgi-002 path_info fix-up executes files by path prefix with cgi.fix_pathinfo = 1 a request for /uploads/avatar.jpg/x.php can make php execute avatar.jpg when the web server forwards any *.php path. php-fpm&#x27;s security.limit_extensions blocks it. cgi.fix_pathinfo cwe-434">
+  <summary><span class="id">CGI-002</span><span class="title">PATH_INFO fix-up executes files by path prefix</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> CGI / FastCGI</span><span><b>Scope</b> config</span><span><b>SAPIs</b> cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/434.html">CWE-434</a></span></div>
+    <p>With cgi.fix_pathinfo = 1 a request for /uploads/avatar.jpg/x.php can make PHP execute avatar.jpg when the web server forwards any *.php path. PHP-FPM&#x27;s security.limit_extensions blocks it.</p>
+    <p><b>Directives</b> <code>cgi.fix_pathinfo</code></p>
+    <p class="fix"><b>Fix:</b> Set cgi.fix_pathinfo = 0, or make sure the web server checks that the script exists (try_files $fastcgi_script_name =404) and security.limit_extensions = .php.</p>
+    <ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2019-11043">https://nvd.nist.gov/vuln/detail/CVE-2019-11043</a></li></ul>
+  </div>
+</details>
+</section>
+<section class="category" data-category="EXT">
+<h2 class="category-heading" id="cat-EXT">Debug and profiling extensions <a class="anchor" href="#cat-EXT">#</a></h2>
+<details class="rule" id="EXT-001" data-severity="critical" data-category="EXT" data-search="ext-001 xdebug accepts debugger connections for any client with discover_client_host (xdebug 3) or remote_connect_back (xdebug 2), xdebug connects back to whoever sent the request and hands them a debugger that can evaluate arbitrary php. xdebug.mode xdebug.discover_client_host xdebug.remote_enable xdebug.remote_connect_back cwe-489">
+  <summary><span class="id">EXT-001</span><span class="title">Xdebug accepts debugger connections for any client</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Debug and profiling extensions</span><span><b>Scope</b> config</span><span><b>Development</b> high</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/489.html">CWE-489</a></span></div>
+    <p>With discover_client_host (Xdebug 3) or remote_connect_back (Xdebug 2), Xdebug connects back to whoever sent the request and hands them a debugger that can evaluate arbitrary PHP.</p>
+    <p><b>Directives</b> <code>xdebug.mode</code>, <code>xdebug.discover_client_host</code>, <code>xdebug.remote_enable</code>, <code>xdebug.remote_connect_back</code></p>
+    <p class="fix"><b>Fix:</b> Never enable client discovery on reachable hosts; remove Xdebug from production.</p>
+    <ul><li><a href="https://xdebug.org/docs/all_settings#discover_client_host">https://xdebug.org/docs/all_settings#discover_client_host</a></li></ul>
+  </div>
+</details>
+<details class="rule" id="EXT-002" data-severity="high" data-category="EXT" data-search="ext-002 xdebug loaded xdebug in production slows every request and, depending on xdebug.mode, exposes debugging, tracing and profiling output. zend_extension xdebug.mode cwe-489">
+  <summary><span class="id">EXT-002</span><span class="title">Xdebug loaded</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Debug and profiling extensions</span><span><b>Scope</b> config</span><span><b>Development</b> info</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/489.html">CWE-489</a></span></div>
+    <p>Xdebug in production slows every request and, depending on xdebug.mode, exposes debugging, tracing and profiling output.</p>
+    <p><b>Directives</b> <code>zend_extension</code>, <code>xdebug.mode</code></p>
+    <p class="fix"><b>Fix:</b> Do not install Xdebug on production systems.</p>
+    
+  </div>
+</details>
+<details class="rule" id="EXT-003" data-severity="low" data-category="EXT" data-search="ext-003 development or profiling extension loaded profilers, coverage drivers and runtime-patching extensions (uopz, runkit) are not meant for production and can change behaviour or leak data. extension zend_extension cwe-489">
+  <summary><span class="id">EXT-003</span><span class="title">Development or profiling extension loaded</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Debug and profiling extensions</span><span><b>Scope</b> config</span><span><b>Profile</b> production only</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/489.html">CWE-489</a></span></div>
+    <p>Profilers, coverage drivers and runtime-patching extensions (uopz, runkit) are not meant for production and can change behaviour or leak data.</p>
+    <p><b>Directives</b> <code>extension</code>, <code>zend_extension</code></p>
+    <p class="fix"><b>Fix:</b> Remove development extensions from production images.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="OPC">
+<h2 class="category-heading" id="cat-OPC">OPcache <a class="anchor" href="#cat-OPC">#</a></h2>
+<details class="rule" id="OPC-001" data-severity="medium" data-category="OPC" data-search="opc-001 opcache file cache enabled compiled scripts in opcache.file_cache are executed without re-reading the source. anyone who can write there (or an arbitrary-file-write bug) can plant opcodes and get code execution. opcache.file_cache cwe-494">
+  <summary><span class="id">OPC-001</span><span class="title">OPcache file cache enabled</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> OPcache</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/494.html">CWE-494</a></span></div>
+    <p>Compiled scripts in opcache.file_cache are executed without re-reading the source. Anyone who can write there (or an arbitrary-file-write bug) can plant opcodes and get code execution.</p>
+    <p><b>Directives</b> <code>opcache.file_cache</code></p>
+    <p class="fix"><b>Fix:</b> Disable the file cache, or keep it in a root-owned directory the PHP user cannot write except through OPcache.</p>
+    
+  </div>
+</details>
+<details class="rule" id="OPC-002" data-severity="low" data-category="OPC" data-search="opc-002 opcache api not restricted any script can call opcache_get_status() (revealing every cached path) or opcache_reset(). this matters on shared hosting. opcache.restrict_api cwe-284">
+  <summary><span class="id">OPC-002</span><span class="title">OPcache API not restricted</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> OPcache</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/284.html">CWE-284</a></span></div>
+    <p>Any script can call opcache_get_status() (revealing every cached path) or opcache_reset(). This matters on shared hosting.</p>
+    <p><b>Directives</b> <code>opcache.restrict_api</code></p>
+    <p class="fix"><b>Fix:</b> Set opcache.restrict_api to the path prefix of trusted admin scripts.</p>
+    
+  </div>
+</details>
+<details class="rule" id="OPC-003" data-severity="info" data-category="OPC" data-search="opc-003 opcache does not isolate users on shared hosting without validate_permission/validate_root, one user&#x27;s scripts may hit another user&#x27;s cached files. opcache.validate_permission opcache.validate_root cwe-653">
+  <summary><span class="id">OPC-003</span><span class="title">OPcache does not isolate users</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> OPcache</span><span><b>Scope</b> config</span><span><b>SAPIs</b> cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/653.html">CWE-653</a></span></div>
+    <p>On shared hosting without validate_permission/validate_root, one user&#x27;s scripts may hit another user&#x27;s cached files.</p>
+    <p><b>Directives</b> <code>opcache.validate_permission</code>, <code>opcache.validate_root</code></p>
+    <p class="fix"><b>Fix:</b> Enable opcache.validate_permission (and validate_root with chroot) on multi-tenant hosts.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="DB">
+<h2 class="category-heading" id="cat-DB">Database and credentials <a class="anchor" href="#cat-DB">#</a></h2>
+<details class="rule" id="DB-001" data-severity="medium" data-category="DB" data-search="db-001 mysql load data local enabled a malicious or spoofed mysql server can ask the client to send any local file the php user can read. mysqli.allow_local_infile cwe-73">
+  <summary><span class="id">DB-001</span><span class="title">MySQL LOAD DATA LOCAL enabled</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Database and credentials</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/73.html">CWE-73</a></span></div>
+    <p>A malicious or spoofed MySQL server can ask the client to send any local file the PHP user can read.</p>
+    <p><b>Directives</b> <code>mysqli.allow_local_infile</code></p>
+    <p class="fix"><b>Fix:</b> Set mysqli.allow_local_infile = Off, or restrict mysqli.local_infile_directory.</p>
+    
+  </div>
+</details>
+<details class="rule" id="DB-002" data-severity="medium" data-category="DB" data-search="db-002 credentials stored in php configuration default passwords in ini files are readable by every user that can read the configuration and are printed by phpinfo() and ini_get_all(). mysqli.default_pw mysql.default_password odbc.default_pw ibase.default_password pdo_odbc.default_pw cwe-260">
+  <summary><span class="id">DB-002</span><span class="title">Credentials stored in PHP configuration</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Database and credentials</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/260.html">CWE-260</a></span></div>
+    <p>Default passwords in INI files are readable by every user that can read the configuration and are printed by phpinfo() and ini_get_all().</p>
+    <p><b>Directives</b> <code>mysqli.default_pw</code>, <code>mysql.default_password</code>, <code>odbc.default_pw</code>, <code>ibase.default_password</code>, <code>pdo_odbc.default_pw</code></p>
+    <p class="fix"><b>Fix:</b> Pass credentials from the application&#x27;s secret storage instead.</p>
+    
+  </div>
+</details>
+<details class="rule" id="DB-003" data-severity="low" data-category="DB" data-search="db-003 sqlite safety features relaxed sqlite3.defensive = off allows sql to corrupt the database file; sqlite3.extension_dir enables sqlite3::loadextension(), which loads native code. sqlite3.defensive sqlite3.extension_dir cwe-114">
+  <summary><span class="id">DB-003</span><span class="title">SQLite safety features relaxed</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Database and credentials</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/114.html">CWE-114</a></span></div>
+    <p>sqlite3.defensive = Off allows SQL to corrupt the database file; sqlite3.extension_dir enables SQLite3::loadExtension(), which loads native code.</p>
+    <p><b>Directives</b> <code>sqlite3.defensive</code>, <code>sqlite3.extension_dir</code></p>
+    <p class="fix"><b>Fix:</b> Keep sqlite3.defensive = On and leave sqlite3.extension_dir unset.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="ENC">
+<h2 class="category-heading" id="cat-ENC">Character encoding <a class="anchor" href="#cat-ENC">#</a></h2>
+<details class="rule" id="ENC-001" data-severity="medium" data-category="ENC" data-search="enc-001 unsafe default character set multi-byte charsets such as gbk, big5 or shift_jis let a trailing byte swallow escape characters (addslashes/escaping bypass, sql injection); an empty charset leaves browsers guessing (xss). default_charset cwe-838">
+  <summary><span class="id">ENC-001</span><span class="title">Unsafe default character set</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Character encoding</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/838.html">CWE-838</a></span></div>
+    <p>Multi-byte charsets such as GBK, Big5 or Shift_JIS let a trailing byte swallow escape characters (addslashes/escaping bypass, SQL injection); an empty charset leaves browsers guessing (XSS).</p>
+    <p><b>Directives</b> <code>default_charset</code></p>
+    <p class="fix"><b>Fix:</b> Set default_charset = &quot;UTF-8&quot;.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ENC-002" data-severity="medium" data-category="ENC" data-search="enc-002 mbstring function overloading enabled mbstring.func_overload silently changes strlen()/substr() into multibyte versions, breaking binary-safe code such as cryptography and length checks. removed in php 8.0. mbstring.func_overload cwe-704">
+  <summary><span class="id">ENC-002</span><span class="title">mbstring function overloading enabled</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Character encoding</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/704.html">CWE-704</a></span></div>
+    <p>mbstring.func_overload silently changes strlen()/substr() into multibyte versions, breaking binary-safe code such as cryptography and length checks. Removed in PHP 8.0.</p>
+    <p><b>Directives</b> <code>mbstring.func_overload</code></p>
+    <p class="fix"><b>Fix:</b> Set mbstring.func_overload = 0 and call mb_* functions explicitly.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ENC-003" data-severity="low" data-category="ENC" data-search="enc-003 multibyte script parsing enabled zend.multibyte lets scripts be parsed in non-ascii-compatible encodings such as shift_jis, which complicates reviewing code and can hide payloads. zend.multibyte cwe-838">
+  <summary><span class="id">ENC-003</span><span class="title">Multibyte script parsing enabled</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Character encoding</span><span><b>Scope</b> config</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/838.html">CWE-838</a></span></div>
+    <p>zend.multibyte lets scripts be parsed in non-ASCII-compatible encodings such as Shift_JIS, which complicates reviewing code and can hide payloads.</p>
+    <p><b>Directives</b> <code>zend.multibyte</code></p>
+    <p class="fix"><b>Fix:</b> Set zend.multibyte = Off unless legacy encodings are required.</p>
+    
+  </div>
+</details>
+<details class="rule" id="ENC-004" data-severity="low" data-category="ENC" data-search="enc-004 automatic input encoding translation mbstring.encoding_translation converts request input before the application validates it, which can undo validation done on raw bytes. mbstring.encoding_translation cwe-838">
+  <summary><span class="id">ENC-004</span><span class="title">Automatic input encoding translation</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Character encoding</span><span><b>Scope</b> config</span><span><b>SAPIs</b> apache2, cgi, fpm, litespeed, unknown</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/838.html">CWE-838</a></span></div>
+    <p>mbstring.encoding_translation converts request input before the application validates it, which can undo validation done on raw bytes.</p>
+    <p><b>Directives</b> <code>mbstring.encoding_translation</code></p>
+    <p class="fix"><b>Fix:</b> Set mbstring.encoding_translation = Off and convert explicitly.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="CFG">
+<h2 class="category-heading" id="cat-CFG">Configuration hygiene <a class="anchor" href="#cat-CFG">#</a></h2>
+<details class="rule" id="CFG-001" data-severity="low" data-category="CFG" data-search="cfg-001 syntax problem in configuration file lines php cannot parse are ignored or stop ini parsing at that point, so later settings silently do not apply.  ">
+  <summary><span class="id">CFG-001</span><span class="title">Syntax problem in configuration file</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> file</span></div>
+    <p>Lines PHP cannot parse are ignored or stop INI parsing at that point, so later settings silently do not apply.</p>
+    
+    <p class="fix"><b>Fix:</b> Fix the reported lines; use &#x27;;&#x27; for comments.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-002" data-severity="info" data-category="CFG" data-search="cfg-002 obsolete directive directives removed from php are ignored. settings such as safe_mode or magic_quotes_gpc give a false sense of protection; register_globals = on is critical on the old versions that still honour it.  ">
+  <summary><span class="id">CFG-002</span><span class="title">Obsolete directive</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> file</span></div>
+    <p>Directives removed from PHP are ignored. Settings such as safe_mode or magic_quotes_gpc give a false sense of protection; register_globals = On is critical on the old versions that still honour it.</p>
+    
+    <p class="fix"><b>Fix:</b> Remove obsolete directives and use their modern replacements.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-003" data-severity="low" data-category="CFG" data-search="cfg-003 unknown directive resembling a known one php ignores unknown directive names (and names are case-sensitive), so a typo such as &#x27;display_error&#x27; leaves the intended protection unset.  ">
+  <summary><span class="id">CFG-003</span><span class="title">Unknown directive resembling a known one</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> file</span></div>
+    <p>PHP ignores unknown directive names (and names are case-sensitive), so a typo such as &#x27;display_error&#x27; leaves the intended protection unset.</p>
+    
+    <p class="fix"><b>Fix:</b> Correct the directive name.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-004" data-severity="info" data-category="CFG" data-search="cfg-004 directive redefined with a different value when php.ini, scan-dir files and pool settings disagree, the last one read wins. reviewers looking at only one file get the wrong picture.  ">
+  <summary><span class="id">CFG-004</span><span class="title">Directive redefined with a different value</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> config</span></div>
+    <p>When php.ini, scan-dir files and pool settings disagree, the last one read wins. Reviewers looking at only one file get the wrong picture.</p>
+    
+    <p class="fix"><b>Fix:</b> Keep each security directive in one place.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-005" data-severity="low" data-category="CFG" data-search="cfg-005 per-directory override that php ignores .user.ini and .htaccess can only change php_ini_perdir/php_ini_all directives. hardening attempted there for php_ini_system directives (disable_functions, allow_url_fopen, expose_php, ...) does not take effect.  ">
+  <summary><span class="id">CFG-005</span><span class="title">Per-directory override that PHP ignores</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> config</span></div>
+    <p>.user.ini and .htaccess can only change PHP_INI_PERDIR/PHP_INI_ALL directives. Hardening attempted there for PHP_INI_SYSTEM directives (disable_functions, allow_url_fopen, expose_php, ...) does not take effect.</p>
+    
+    <p class="fix"><b>Fix:</b> Move the setting to php.ini or to php_admin_value in the FPM pool / Apache vhost.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-006" data-severity="medium" data-category="CFG" data-search="cfg-006 no php.ini loaded: built-in defaults in effect without php.ini, php runs with compiled-in defaults: display_errors = on, register_argc_argv = on, expose_php = on, enable_dl = on and no disable_functions. official docker images ship this way.  ">
+  <summary><span class="id">CFG-006</span><span class="title">No php.ini loaded: built-in defaults in effect</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> config</span></div>
+    <p>Without php.ini, PHP runs with compiled-in defaults: display_errors = On, register_argc_argv = On, expose_php = On, enable_dl = On and no disable_functions. Official Docker images ship this way.</p>
+    
+    <p class="fix"><b>Fix:</b> Copy php.ini-production to php.ini and adjust it.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-007" data-severity="info" data-category="CFG" data-search="cfg-007 value depends on an environment variable ${var} is expanded by php at start-up from its own environment, so a static audit cannot know the effective value; rules evaluated the literal text.  ">
+  <summary><span class="id">CFG-007</span><span class="title">Value depends on an environment variable</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> file</span></div>
+    <p>${VAR} is expanded by PHP at start-up from its own environment, so a static audit cannot know the effective value; rules evaluated the literal text.</p>
+    
+    <p class="fix"><b>Fix:</b> Check the variable in the PHP process environment, or use a literal value.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-008" data-severity="low" data-category="CFG" data-search="cfg-008 development configuration used in production the combination of display_errors, zend.assertions and mysqlnd memory statistics matches php.ini-development. display_errors zend.assertions mysqlnd.collect_memory_statistics ">
+  <summary><span class="id">CFG-008</span><span class="title">Development configuration used in production</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> config</span><span><b>Profile</b> production only</span></div>
+    <p>The combination of display_errors, zend.assertions and mysqlnd memory statistics matches php.ini-development.</p>
+    <p><b>Directives</b> <code>display_errors</code>, <code>zend.assertions</code>, <code>mysqlnd.collect_memory_statistics</code></p>
+    <p class="fix"><b>Fix:</b> Start from php.ini-production.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-009" data-severity="info" data-category="CFG" data-search="cfg-009 conditional [path=]/[host=] section directives in [path=...] or [host=...] sections apply only to matching requests under cgi/fastcgi; they are audited as separate overlays.  ">
+  <summary><span class="id">CFG-009</span><span class="title">Conditional [PATH=]/[HOST=] section</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> file</span></div>
+    <p>Directives in [PATH=...] or [HOST=...] sections apply only to matching requests under CGI/FastCGI; they are audited as separate overlays.</p>
+    
+    <p class="fix"><b>Fix:</b> Verify these sections still match deployed paths and hosts.</p>
+    
+  </div>
+</details>
+<details class="rule" id="CFG-010" data-severity="info" data-category="CFG" data-search="cfg-010 deprecated directive deprecated directives set to a non-default value still work but emit warnings and will disappear in a future release.  ">
+  <summary><span class="id">CFG-010</span><span class="title">Deprecated directive</span><span class="sev sev-info">info</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Configuration hygiene</span><span><b>Scope</b> file</span></div>
+    <p>Deprecated directives set to a non-default value still work but emit warnings and will disappear in a future release.</p>
+    
+    <p class="fix"><b>Fix:</b> Plan to remove the directive.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="FPM">
+<h2 class="category-heading" id="cat-FPM">PHP-FPM pools <a class="anchor" href="#cat-FPM">#</a></h2>
+<details class="rule" id="FPM-001" data-severity="critical" data-category="FPM" data-search="fpm-001 fastcgi port reachable from the network fastcgi has no authentication. anyone who reaches the port can pass php_value / php_admin_value (e.g. auto_prepend_file = php://input) and execute code.  cwe-306">
+  <summary><span class="id">FPM-001</span><span class="title">FastCGI port reachable from the network</span><span class="sev sev-critical">critical</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/306.html">CWE-306</a></span></div>
+    <p>FastCGI has no authentication. Anyone who reaches the port can pass PHP_VALUE / PHP_ADMIN_VALUE (e.g. auto_prepend_file = php://input) and execute code.</p>
+    
+    <p class="fix"><b>Fix:</b> Listen on a Unix socket or 127.0.0.1, and set listen.allowed_clients; never publish the port outside the host or container network.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FPM-002" data-severity="high" data-category="FPM" data-search="fpm-002 non-php files executable by the pool security.limit_extensions restricts which files fpm will execute. an empty list or image/text extensions turn uploaded files into code.  cwe-434">
+  <summary><span class="id">FPM-002</span><span class="title">Non-PHP files executable by the pool</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/434.html">CWE-434</a></span></div>
+    <p>security.limit_extensions restricts which files FPM will execute. An empty list or image/text extensions turn uploaded files into code.</p>
+    
+    <p class="fix"><b>Fix:</b> Use security.limit_extensions = .php</p>
+    
+  </div>
+</details>
+<details class="rule" id="FPM-003" data-severity="medium" data-category="FPM" data-search="fpm-003 fastcgi socket writable by every user a world-writable fpm socket lets any local user send fastcgi requests and run code as the pool user.  cwe-276">
+  <summary><span class="id">FPM-003</span><span class="title">FastCGI socket writable by every user</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/276.html">CWE-276</a></span></div>
+    <p>A world-writable FPM socket lets any local user send FastCGI requests and run code as the pool user.</p>
+    
+    <p class="fix"><b>Fix:</b> Use listen.mode = 0660 with listen.owner/listen.group set to the web server.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FPM-004" data-severity="high" data-category="FPM" data-search="fpm-004 pool workers run as root running php as root turns any application bug into full system compromise.  cwe-250">
+  <summary><span class="id">FPM-004</span><span class="title">Pool workers run as root</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/250.html">CWE-250</a></span></div>
+    <p>Running PHP as root turns any application bug into full system compromise.</p>
+    
+    <p class="fix"><b>Fix:</b> Run each pool as a dedicated unprivileged user and group.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FPM-005" data-severity="low" data-category="FPM" data-search="fpm-005 status or ping endpoint enabled pm.status_path and ping.path expose pool internals (client ips, request uris) if the web server forwards them.  cwe-200">
+  <summary><span class="id">FPM-005</span><span class="title">Status or ping endpoint enabled</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/200.html">CWE-200</a></span></div>
+    <p>pm.status_path and ping.path expose pool internals (client IPs, request URIs) if the web server forwards them.</p>
+    
+    <p class="fix"><b>Fix:</b> Remove them or restrict access in the web server.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FPM-006" data-severity="low" data-category="FPM" data-search="fpm-006 full environment passed to php clear_env = no gives php every environment variable of the fpm master.  cwe-526">
+  <summary><span class="id">FPM-006</span><span class="title">Full environment passed to PHP</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/526.html">CWE-526</a></span></div>
+    <p>clear_env = no gives PHP every environment variable of the FPM master.</p>
+    
+    <p class="fix"><b>Fix:</b> Keep clear_env = yes and pass only needed variables with env[NAME].</p>
+    
+  </div>
+</details>
+<details class="rule" id="FPM-007" data-severity="medium" data-category="FPM" data-search="fpm-007 secret stored in pool configuration literal secrets in env[] entries end up in configuration backups and in phpinfo()/$_server.  cwe-260">
+  <summary><span class="id">FPM-007</span><span class="title">Secret stored in pool configuration</span><span class="sev sev-medium">medium</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/260.html">CWE-260</a></span></div>
+    <p>Literal secrets in env[] entries end up in configuration backups and in phpinfo()/$_SERVER.</p>
+    
+    <p class="fix"><b>Fix:</b> Reference the master environment (env[DB_PASSWORD] = $DB_PASSWORD) or use a secret store.</p>
+    
+  </div>
+</details>
+<details class="rule" id="FPM-008" data-severity="low" data-category="FPM" data-search="fpm-008 workers are dumpable process.dumpable = yes allows core dumps and ptrace of workers by the same user, exposing secrets held in memory.  cwe-528">
+  <summary><span class="id">FPM-008</span><span class="title">Workers are dumpable</span><span class="sev sev-low">low</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> PHP-FPM pools</span><span><b>Scope</b> pool</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/528.html">CWE-528</a></span></div>
+    <p>process.dumpable = yes allows core dumps and ptrace of workers by the same user, exposing secrets held in memory.</p>
+    
+    <p class="fix"><b>Fix:</b> Keep process.dumpable = no.</p>
+    
+  </div>
+</details>
+</section>
+<section class="category" data-category="HTA">
+<h2 class="category-heading" id="cat-HTA">Apache .htaccess <a class="anchor" href="#cat-HTA">#</a></h2>
+<details class="rule" id="HTA-001" data-severity="high" data-category="HTA" data-search="hta-001 non-php files mapped to the php handler addtype/addhandler/sethandler mapping images, text or every file to php makes uploads executable.  cwe-434">
+  <summary><span class="id">HTA-001</span><span class="title">Non-PHP files mapped to the PHP handler</span><span class="sev sev-high">high</span></summary>
+  <div class="body">
+    <div class="meta"><span><b>Category</b> Apache .htaccess</span><span><b>Scope</b> file</span><span><b>Weakness</b> <a href="https://cwe.mitre.org/data/definitions/434.html">CWE-434</a></span></div>
+    <p>AddType/AddHandler/SetHandler mapping images, text or every file to PHP makes uploads executable.</p>
+    
+    <p class="fix"><b>Fix:</b> Map only .php to the PHP handler, inside &lt;FilesMatch &quot;\.php$&quot;&gt;.</p>
+    
+  </div>
+</details>
+</section>
+<!-- /generated:rules --></div>
+  <p id="no-match" hidden>No rule matches the filters.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">php-ini-audit <!-- generated:version -->0.1.0<!-- /generated:version --> · <a href="https://github.com/jorgsowa/php-ini-audit">Source on GitHub</a></div>
+</footer>
+<script src="assets/rules.js"></script>
+</body>
+</html>
