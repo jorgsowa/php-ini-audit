@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net/npm/php-wasm@0.2.0/ 'wasm-unsafe-eval'; connect-src 'self' https://cdn.jsdelivr.net/npm/php-wasm@0.2.0/; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Browser scanner — php-ini-audit</title>
   <meta name="description" content="Paste phpinfo() output, php.ini, .user.ini, a PHP-FPM pool or .htaccess and audit it in your browser. Nothing is uploaded.">
   <link rel="stylesheet" href="assets/style.css">
@@ -92,9 +92,11 @@
   <pre><code><!-- generated:ini-dump -->&lt;?php
 header(&#x27;Content-Type: text/plain&#x27;);
 header(&#x27;Cache-Control: no-store&#x27;);
-// Credentials only need to be known as set.
+// Credentials only need to be known as set; URLs (session.save_path, DSNs) can embed them too.
 $show = fn ($name, $value) =&gt; (string) $value === &#x27;&#x27; ? &#x27;no value&#x27;
-    : (preg_match(&#x27;/(^|[._])(pw|pass|passwd|password|secret)$/i&#x27;, $name) ? &#x27;(set)&#x27; : $value);
+    : (preg_match(&#x27;/(^|[._])(pw|pass|passwd|password|secret|token|auth|license|licence|api_?key)$/i&#x27;, $name) ? &#x27;(set)&#x27;
+    : preg_replace([&#x27;#(://)[^/@\s]*@#&#x27;, &#x27;/([?&amp;;]\s*(?:pw|pass|passwd|password|secret|token|auth|api_?key)\w*=)[^&amp;;,\s]*/i&#x27;],
+        [&#x27;$1(set)@&#x27;, &#x27;$1(set)&#x27;], $value));
 echo &#x27;PHP Version =&gt; &#x27;, PHP_VERSION, &quot;\nServer API =&gt; &quot;, PHP_SAPI, &quot;\nSystem =&gt; &quot;, PHP_OS_FAMILY,
     &quot;\nLoaded Configuration File =&gt; &quot;, php_ini_loaded_file() ?: &#x27;(none)&#x27;,
     &quot;\nAdditional .ini files parsed =&gt; &quot;, str_replace(&quot;,\n&quot;, &#x27;, &#x27;, trim((string) php_ini_scanned_files())) ?: &#x27;(none)&#x27;, &quot;\n\n&quot;;

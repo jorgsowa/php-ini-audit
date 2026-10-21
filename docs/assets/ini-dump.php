@@ -1,9 +1,11 @@
 <?php
 header('Content-Type: text/plain');
 header('Cache-Control: no-store');
-// Credentials only need to be known as set.
+// Credentials only need to be known as set; URLs (session.save_path, DSNs) can embed them too.
 $show = fn ($name, $value) => (string) $value === '' ? 'no value'
-    : (preg_match('/(^|[._])(pw|pass|passwd|password|secret)$/i', $name) ? '(set)' : $value);
+    : (preg_match('/(^|[._])(pw|pass|passwd|password|secret|token|auth|license|licence|api_?key)$/i', $name) ? '(set)'
+    : preg_replace(['#(://)[^/@\s]*@#', '/([?&;]\s*(?:pw|pass|passwd|password|secret|token|auth|api_?key)\w*=)[^&;,\s]*/i'],
+        ['$1(set)@', '$1(set)'], $value));
 echo 'PHP Version => ', PHP_VERSION, "\nServer API => ", PHP_SAPI, "\nSystem => ", PHP_OS_FAMILY,
     "\nLoaded Configuration File => ", php_ini_loaded_file() ?: '(none)',
     "\nAdditional .ini files parsed => ", str_replace(",\n", ', ', trim((string) php_ini_scanned_files())) ?: '(none)', "\n\n";

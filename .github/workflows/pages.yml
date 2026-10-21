@@ -3,7 +3,7 @@ name: Documentation
 on:
   push:
     branches: [main]
-    paths: ["docs/**", "src/**", "scripts/build_docs.php", "scripts/bundle.php", ".github/workflows/pages.yml"]
+    paths: ["docs/**", "src/**", "scripts/build_docs.php", "scripts/bundle.php", "scripts/fetch_php_wasm.php", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -29,6 +29,8 @@ jobs:
           coverage: none
       - name: Regenerate rule reference and scanner bundle
         run: php scripts/build_docs.php
+      - name: Fetch the php-wasm runtime
+        run: php scripts/fetch_php_wasm.php
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

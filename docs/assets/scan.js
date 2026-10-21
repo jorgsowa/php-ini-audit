@@ -1,5 +1,6 @@
 (function () {
-  var PHP_WASM = "https://cdn.jsdelivr.net/npm/php-wasm@0.2.0/";
+  // Dynamic import() resolves against this script, fetch() against the page.
+  var PHP_WASM = new URL("assets/php-wasm/", document.baseURI).href;
   var SEVERITIES = ["critical", "high", "medium", "low", "info"];
   var form = document.getElementById("scan-form");
   var input = document.getElementById("scan-input");
