@@ -42,25 +42,23 @@ jobs:
     name: Parity with PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    container: php:${{ matrix.php }}-cli
     strategy:
       fail-fast: false
       matrix:
         php: ["8.5"]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - name: Install php-cgi
+      # setup-python's toolcache builds target the Ubuntu runner, not the Debian-based PHP image.
+      - name: Install Python
         run: |
-          sudo add-apt-repository -y ppa:ondrej/php
-          sudo apt-get update -q -o Acquire::Retries=5
-          sudo apt-get install -y -q -o Acquire::Retries=5 --no-install-recommends php${{ matrix.php }}-cgi
+          apt-get update -q -o Acquire::Retries=5
+          apt-get install -y -q -o Acquire::Retries=5 --no-install-recommends python3
       - name: Parity tests
         env:
-          PHP_CGI: /usr/bin/php-cgi${{ matrix.php }}
+          PHP_CGI: /usr/local/bin/php-cgi
           PYTHONPATH: src
-        run: python -m unittest tests.test_php_parity -v
+        run: python3 -m unittest tests.test_php_parity -v
 
   docker-images:
     name: Real PHP images
